@@ -1,35 +1,26 @@
-let entries = [];
-let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-let currentLang = localStorage.getItem('lang') || 'fa';
-
-const searchInput = document.getElementById('search-input');
-const entriesList = document.getElementById('entries-list');
-const favoritesList = document.getElementById('favorites-list');
-
-// اصلاح مسیر: فایل مستقیماً در ریشه است، نه در پوشه data
 async function loadEntries() {
+    const listElement = document.getElementById('entriesList');
     try {
-        const response = await fetch("entries.json");
-        entries = await response.json();
-        renderEntries(entries);
+        const response = await fetch('data/entries.json');
+        if (!response.ok) throw new Error('فایل داده‌ها پیدا نشد');
+        
+        const entries = await response.json();
+        listElement.innerHTML = ''; // پاک کردن متن "در حال بارگذاری"
+
+        entries.forEach(entry => {
+            const div = document.createElement('div');
+            div.className = 'entry-card';
+            div.innerHTML = `
+                <h3>${entry.title}</h3>
+                <p>${entry.desc}</p>
+            `;
+            listElement.appendChild(div);
+        });
     } catch (error) {
-        console.error("خطا در بارگذاری اطلاعات:", error);
+        listElement.innerHTML = '<p>خطا در دریافت اطلاعات. لطفا دوباره تلاش کنید.</p>';
+        console.error(error);
     }
 }
 
-function renderEntries(data) {
-    entriesList.innerHTML = '';
-    data.forEach(entry => {
-        const div = document.createElement('div');
-        div.className = 'entry-card';
-        div.innerHTML = `
-            <h3>${currentLang === 'fa' ? entry.title : entry.titleEn}</h3>
-            <p>${currentLang === 'fa' ? entry.desc : entry.descEn}</p>
-        `;
-        entriesList.appendChild(div);
-    });
-}
-
-// راه اندازی اولیه
-document.addEventListener('DOMContentLoaded', loadEntries);
-۵
+// اجرای تابع هنگام باز شدن صفحه
+loadEntries();
