@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشیار | Daneshyar</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+
+    <div class="topbar">
+        <span>دانشیار</span>
+        <div class="top-actions">
+            <button id="theme-toggle">🌙</button>
+            <button id="lang-toggle">EN</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="hero">
+            <h1 id="hero-title">دانشنامه همراه شما</h1>
+            <p id="hero-subtitle">جستجو در اطلاعات عمومی و مدخل‌های دانشنامه</p>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="جستجو...">
+        </div>
+
+        <h3 id="category-title">دسته‌بندی‌ها</h3>
+        <div id="category-list" class="category-list"></div>
+
+        <h3 id="results-title">مدخل‌ها</h3>
+        <div id="entries-list" class="entries-list"></div>
+
+        <h3 id="favorites-title">علاقه‌مندی‌ها</h3>
+        <div id="favorites-list" class="entries-list"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
