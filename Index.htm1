@@ -1,52 +1,42 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>دانشیار</title>
-  <meta name="theme-color" content="#0f172a" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشیار | Daneshyar</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
-  <header class="topbar">
-    <h1 id="app-title">دانشیار</h1>
-    <div class="top-actions">
-      <button id="lang-toggle">EN</button>
-      <button id="theme-toggle">🌙</button>
+
+    <div class="topbar">
+        <span>دانشیار</span>
+        <div class="top-actions">
+            <button id="theme-toggle">🌙</button>
+            <button id="lang-toggle">EN</button>
+        </div>
     </div>
-  </header>
 
-  <main class="container">
-    <section class="hero">
-      <h2 id="hero-title">دانشنامه همراه شما</h2>
-      <p id="hero-subtitle">جستجو در اطلاعات عمومی و مدخل‌های دانشنامه</p>
-    </section>
+    <div class="container">
+        <div class="hero">
+            <h1 id="hero-title">دانشنامه همراه شما</h1>
+            <p id="hero-subtitle">جستجو در اطلاعات عمومی و مدخل‌های دانشنامه</p>
+        </div>
 
-    <section class="search-box">
-      <input
-        type="text"
-        id="search-input"
-        placeholder="جستجو..."
-      />
-    </section>
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="جستجو...">
+        </div>
 
-    <section class="categories">
-      <h3 id="category-title">دسته‌بندی‌ها</h3>
-      <div id="category-list" class="category-list"></div>
-    </section>
+        <h3 id="category-title">دسته‌بندی‌ها</h3>
+        <div id="category-list" class="category-list"></div>
 
-    <section class="results">
-      <h3 id="results-title">مدخل‌ها</h3>
-      <div id="entries-list" class="entries-list"></div>
-    </section>
+        <h3 id="results-title">مدخل‌ها</h3>
+        <div id="entries-list" class="entries-list"></div>
 
-    <section class="favorites">
-      <h3 id="favorites-title">علاقه‌مندی‌ها</h3>
-      <div id="favorites-list" class="entries-list"></div>
-    </section>
-  </main>
+        <h3 id="favorites-title">علاقه‌مندی‌ها</h3>
+        <div id="favorites-list" class="entries-list"></div>
+    </div>
 
-  <script src="app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
