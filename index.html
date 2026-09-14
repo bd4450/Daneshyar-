@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشیار</title>
+    <style>
+        body { font-family: Tahoma, sans-serif; margin: 0; padding: 15px; background: #f4f6f8; direction: rtl; }
+        header { text-align: center; margin-bottom: 20px; }
+        h1 { color: #2c3e50; margin-bottom: 10px; }
+        input { width: 100%; max-width: 400px; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        .entry-card { background: white; border-radius: 8px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .entry-card h3 { margin: 0 0 8px 0; color: #16a085; }
+        .entry-card p { margin: 0; color: #555; line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>دانشیار</h1>
+        <input type="text" id="searchInput" onkeyup="searchEntries()" placeholder="جستجو در دانشنامه...">
+    </header>
+
+    <main id="entriesList"></main>
+
+    <script>
+        // داده‌های نمونه داخل خود کد قرار داده شدند تا نیازی به فایل خارجی نباشد
+        const entries = [
+            { title: "آب", desc: "ماده‌ای شیمیایی و مرکب از دو عنصر هیدروژن و اکسیژن که بخش اعظم سطح زمین را پوشانده است." },
+            { title: "البرز", desc: "رشته‌کوهی در شمال ایران که بلندترین قله آن دماوند است." },
+            { title: "خورشید", desc: "تنها ستاره منظومه شمسی که مرکز ثقل این منظومه به شمار می‌رود." },
+            { title: "سعدی", desc: "شاعر و نویسنده بزرگ پارسی‌گوی سده هفتم هجری قمری صاحب گلستان و بوستان." }
+        ];
+
+        function render(items) {
+            const list = document.getElementById('entriesList');
+            list.innerHTML = '';
+            if(items.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:#888;">نتیجه‌ای یافت نشد.</p>';
+                return;
+            }
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'entry-card';
+                div.innerHTML = `<h3>${item.title}</h3><p>${item.desc}</p>`;
+                list.appendChild(div);
+            });
+        }
+
+        function searchEntries() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const filtered = entries.filter(e => e.title.toLowerCase().includes(query) || e.desc.toLowerCase().includes(query));
+            render(filtered);
+        }
+
+        // بارگذاری اولیه
+        render(entries);
+    </script>
+
+</body>
+</html>
