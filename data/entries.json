@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "title_fa": "تخت جمشید",
+    "title_en": "Persepolis",
+    "category_fa": "تاریخ و جغرافیا",
+    "category_en": "History & Geography",
+    "content_fa": "پایتخت تشریفاتی پادشاهی ایران در دوران امپراتوری هخامنشیان که در استان فارس واقع شده است.",
+    "content_en": "The ceremonial capital of the Achaemenid Empire, located in Fars Province, Iran.",
+    "keywords": ["هخامنشیان", "شیراز", "داریوش", "Achaemenid", "Iran", "Fars"]
+  },
+  {
+    "id": 2,
+    "title_fa": "فردوسی",
+    "title_en": "Ferdowsi",
+    "category_fa": "ادبیات و مفاخر",
+    "category_en": "Literature",
+    "content_fa": "حکیم ابوالقاسم فردوسی طوسی، شاعر حماسه‌سرای بزرگ ایرانی و سراینده شاهنامه.",
+    "content_en": "Hakim Abul-Qasim Ferdowsi Tusi, a great Persian poet and the author of Shahnameh.",
+    "keywords": ["شاهنامه", "طوس", "شعر", "ادبیات", "Shahnameh", "Poet"]
+  },
+  {
+    "id": 3,
+    "title_fa": "نیتروژن",
+    "title_en": "Nitrogen",
+    "category_fa": "علم و طبیعت",
+    "category_en": "Science & Nature",
+    "content_fa": "عنصری شیمیایی با نماد N و عدد اتمی ۷؛ فراوان‌ترین گاز موجود در جو زمین (حدود ۷۸ درصد).",
+    "content_en": "A chemical element with symbol N and atomic number 7; makes up about 78% of Earth's atmosphere.",
+    "keywords": ["گاز", "شیمی", "جدول تناوبی", "جو", "Chemistry", "Gas"]
+  },
+  {
+    "id": 4,
+    "title_fa": "خلیج فارس",
+    "title_en": "Persian Gulf",
+    "category_fa": "تاریخ و جغرافیا",
+    "category_en": "History & Geography",
+    "content_fa": "آبراهی ارزشمند در جنوب غربی آسیا و خاورمیانه، میان ایران و شبه‌جزیره عربستان.",
+    "content_en": "A Mediterranean sea in Western Asia located between Iran and the Arabian Peninsula.",
+    "keywords": ["دریا", "جنوب", "نفت", "خاورمیانه", "Sea", "Gulf"]
+  },
+  {
+    "id": 5,
+    "title_fa": "اورست",
+    "title_en": "Mount Everest",
+    "category_fa": "اطلاعات عمومی و جدول",
+    "category_en": "General Knowledge",
+    "content_fa": "بلندترین کوه و قله روی کره زمین با ارتفاع ۸۸۴۸ متر واقع در رشته‌کوه هیمالیا.",
+    "content_en": "Earth's highest mountain above sea level, located in the Mahalangur Himal sub-range of the Himalayas.",
+    "keywords": ["کوه", "قله", "هیمالیا", "نپال", "Mountain", "Peak"]
+  }
+]
