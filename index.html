@@ -1,254 +1,292 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>دانشیار - دانشنامه جامع</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            font-family: system-ui, -apple-system, Tahoma, sans-serif;
-        }
-        body {
-            margin: 0;
-            padding: 14px;
-            background-color: #f7f9fa;
-            color: #202124;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 14px;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 22px;
-            color: #1a73e8;
-        }
-        .header p {
-            margin: 3px 0 0;
-            font-size: 12px;
-            color: #5f6368;
-        }
-        .search-container {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        .search-box {
-            flex: 1;
-            padding: 12px;
-            font-size: 15px;
-            border: 2px solid #1a73e8;
-            border-radius: 10px;
-            outline: none;
-            background-color: #fff;
-        }
-        .btn-search {
-            background-color: #1a73e8;
-            color: white;
-            border: none;
-            padding: 0 16px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        #results {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .card {
-            background: #fff;
-            padding: 14px;
-            border-radius: 10px;
-            border: 1px solid #dadce0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            cursor: pointer;
-        }
-        .card h3 {
-            margin: 0 0 6px 0;
-            font-size: 16px;
-            color: #1a73e8;
-        }
-        .card p {
-            margin: 0;
-            font-size: 13px;
-            line-height: 1.6;
-            color: #4d5156;
-        }
-        .badge {
-            display: inline-block;
-            margin-top: 8px;
-            font-size: 12px;
-            color: #1a73e8;
-            font-weight: bold;
-        }
-        /* استایل نمایش مقاله کامل با فرمت دقیق */
-        .article-container {
-            background: #fff;
-            padding: 16px;
-            border-radius: 12px;
-            border: 1px solid #dadce0;
-            line-height: 1.8;
-            font-size: 14.5px;
-            overflow-x: hidden;
-        }
-        .article-container h1, .article-container h2, .article-container h3 {
-            color: #1a73e8;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 6px;
-            margin-top: 18px;
-        }
-        .article-container img {
-            max-width: 100% !important;
-            height: auto !important;
-            border-radius: 8px;
-            margin: 8px 0;
-        }
-        .article-container table {
-            width: 100% !important;
-            max-width: 100%;
-            display: block;
-            overflow-x: auto;
-            border-collapse: collapse;
-            margin: 14px 0;
-            font-size: 13px;
-            background: #fafafa;
-        }
-        .article-container th, .article-container td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
-        .article-container th {
-            background: #eef4ff;
-        }
-        .back-btn {
-            display: block;
-            width: 100%;
-            margin-bottom: 14px;
-            padding: 10px;
-            background: #1a73e8;
-            color: #fff;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            font-weight: bold;
-            border: none;
-            text-align: center;
-        }
-        .msg {
-            text-align: center;
-            color: #5f6368;
-            font-size: 14px;
-            margin-top: 30px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>دانشیار | دانشنامه جامع و حل جدول</title>
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --border-color: #e2e8f0;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      --badge-bg: #eff6ff;
+      --badge-color: #1d4ed8;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #60a5fa;
+      --border-color: #334155;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      --badge-bg: #1e3a8a;
+      --badge-color: #93c5fd;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      padding: 16px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-title {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: var(--primary);
+    }
+
+    .theme-toggle {
+      background: none;
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: 20px;
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .search-box {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 1rem;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      background-color: var(--card-bg);
+      color: var(--text-primary);
+      outline: none;
+      box-shadow: var(--shadow);
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+    }
+
+    .stats-bar {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .results-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--primary);
+    }
+
+    .card-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-left: 6px;
+    }
+
+    .badge {
+      background-color: var(--badge-bg);
+      color: var(--badge-color);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+
+    .card-content {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      background-color: var(--bg-color);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-secondary);
+    }
+  </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>دانشیار</h1>
-        <p>دانشنامه جامع و حل جدول</p>
+  <header>
+    <div class="logo-container">
+      <span class="logo-title">📚 دانشیار</span>
     </div>
+    <button class="theme-toggle" id="themeBtn">🌙 حالت شب</button>
+  </header>
 
-    <div class="search-container">
-        <input type="text" id="searchInput" class="search-box" placeholder="جستجوی موضوع یا نام (مثلاً فردوسی)...">
-        <button class="btn-search" onclick="searchEncyclopedia()">جستجو</button>
-    </div>
+  <div class="search-box">
+    <input type="text" id="searchInput" class="search-input" placeholder="جستجو در کلمات، تعریف‌ها، جدول و عبارت‌ها..." autocomplete="off">
+  </div>
 
-    <div id="results"></div>
+  <div class="stats-bar">
+    <span id="resultCount">در حال دریافت اطلاعات...</span>
+    <span>نسخه ۱.۰</span>
+  </div>
 
-    <script>
-        let lastListHtml = '';
+  <div class="results-container" id="resultsList"></div>
 
-        document.getElementById("searchInput").addEventListener("keypress", function(e) {
-            if (e.key === "Enter") searchEncyclopedia();
-        });
+  <script>
+    let encyclopediaData = [];
+    const searchInput = document.getElementById('searchInput');
+    const resultsList = document.getElementById('resultsList');
+    const resultCount = document.getElementById('resultCount');
+    const themeBtn = document.getElementById('themeBtn');
 
-        async function searchEncyclopedia() {
-            const query = document.getElementById('searchInput').value.trim();
-            const resultsBox = document.getElementById('results');
+    // بارگذاری داده‌ها از فایل JSON
+    async function initData() {
+      try {
+        const res = await fetch('data/entries.json');
+        if (!res.ok) throw new Error('خطا در دریافت فایل داده‌ها');
+        encyclopediaData = await res.json();
+        renderResults(encyclopediaData);
+      } catch (err) {
+        resultCount.textContent = 'خطا در بارگذاری داده‌ها.';
+        console.error(err);
+      }
+    }
 
-            if (!query) {
-                resultsBox.innerHTML = '<div class="msg">لطفاً کلمه‌ای برای جستجو وارد کنید.</div>';
-                return;
-            }
+    // رندر کارت‌ها
+    function renderResults(items) {
+      resultsList.innerHTML = '';
+      resultCount.textContent = `تعداد یافته‌ها: ${items.length} مورد`;
 
-            resultsBox.innerHTML = '<div class="msg">در حال جستجو...</div>';
+      if (items.length === 0) {
+        resultsList.innerHTML = '<div class="empty-state">نتیجه‌ای برای این عبارت پیدا نشد.</div>';
+        return;
+      }
 
-            try {
-                const url = `https://fa.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`;
-                const res = await fetch(url);
-                const data = await res.json();
-                const list = data.query.search;
+      items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
 
-                if (!list || list.length === 0) {
-                    resultsBox.innerHTML = '<div class="msg">موردی یافت نشد.</div>';
-                    return;
-                }
+        const keywordsHTML = item.keywords 
+          ? item.keywords.map(kw => `<span class="tag">#${kw}</span>`).join('') 
+          : '';
 
-                resultsBox.innerHTML = list.map(item => {
-                    const cleanSnippet = item.snippet.replace(/<[^>]*>?/gm, '');
-                    return `
-                        <div class="card" onclick="loadFullArticle('${encodeURIComponent(item.title)}')">
-                            <h3>${item.title}</h3>
-                            <p>${cleanSnippet}...</p>
-                            <span class="badge">👈 مشاهده مقاله کامل، زندگینامه و آثار</span>
-                        </div>
-                    `;
-                }).join('');
+        card.innerHTML = `
+          <div class="card-header">
+            <div>
+              <span class="card-title">${item.title_fa}</span>
+              ${item.title_en ? `<span class="card-subtitle">(${item.title_en})</span>` : ''}
+            </div>
+            <span class="badge">${item.category_fa || 'اطلاعات عمومی'}</span>
+          </div>
+          <div class="card-content">${item.content_fa || item.desc || ''}</div>
+          <div class="keywords">${keywordsHTML}</div>
+        `;
+        resultsList.appendChild(card);
+      });
+    }
 
-                lastListHtml = resultsBox.innerHTML;
+    // موتور جستجوی لحظه‌ای
+    searchInput.addEventListener('input', (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      if (!q) {
+        renderResults(encyclopediaData);
+        return;
+      }
 
-            } catch (err) {
-                resultsBox.innerHTML = '<div class="msg">خطا در ارتباط با سرور. اتصال اینترنت را چک کنید.</div>';
-            }
-        }
+      const filtered = encyclopediaData.filter(item => {
+        const titleFa = (item.title_fa || '').toLowerCase();
+        const titleEn = (item.title_en || '').toLowerCase();
+        const contentFa = (item.content_fa || item.desc || '').toLowerCase();
+        const keywords = (item.keywords || []).map(k => k.toLowerCase());
 
-        async function loadFullArticle(encodedTitle) {
-            const resultsBox = document.getElementById('results');
-            resultsBox.innerHTML = '<div class="msg">در حال بارگذاری کل مقاله و مشخصات کامل...</div>';
+        return titleFa.includes(q) || 
+               titleEn.includes(q) || 
+               contentFa.includes(q) || 
+               keywords.some(k => k.includes(q));
+      });
 
-            const title = decodeURIComponent(encodedTitle);
+      renderResults(filtered);
+    });
 
-            try {
-                // دریافت محتوای HTML کامل و رسمی مقاله
-                const url = `https://fa.wikipedia.org/w/api.php?action=parse&page=${encodeURIComponent(title)}&prop=text&format=json&origin=*`;
-                const res = await fetch(url);
-                const data = await res.json();
+    // سوییچ تم (تیره / روشن)
+    themeBtn.addEventListener('click', () => {
+      const isDark = document.body.getAttribute('data-theme') === 'dark';
+      if (isDark) {
+        document.body.removeAttribute('data-theme');
+        themeBtn.textContent = '🌙 حالت شب';
+      } else {
+        document.body.setAttribute('data-theme', 'dark');
+        themeBtn.textContent = '☀️ حالت روز';
+      }
+    });
 
-                if (!data.parse || !data.parse.text) {
-                    resultsBox.innerHTML = '<div class="msg">اطلاعات این صفحه قابل دریافت نیست.</div>';
-                    return;
-                }
-
-                let articleHtml = data.parse.text['*'];
-
-                // اصلاح مسیر لینک‌ها و عکس‌ها تا در صفحه درست کار کنند
-                articleHtml = articleHtml.replace(/href="\/wiki\//g, 'href="https://fa.wikipedia.org/wiki/');
-                articleHtml = articleHtml.replace(/src="\/\//g, 'src="https://');
-
-                resultsBox.innerHTML = `
-                    <button class="back-btn" onclick="goBack()">⬅ بازگشت به نتایج جستجو</button>
-                    <div class="article-container">
-                        ${articleHtml}
-                    </div>
-                    <button class="back-btn" style="margin-top: 14px;" onclick="goBack()">⬅ بازگشت به بالا</button>
-                `;
-
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-
-            } catch (err) {
-                resultsBox.innerHTML = '<div class="msg">خطا در دریافت متن کامل. لطفاً دوباره تلاش کنید.</div>';
-            }
-        }
-
-        function goBack() {
-            document.getElementById('results').innerHTML = lastListHtml;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    </script>
-
+    // شروع کار
+    document.addEventListener('DOMContentLoaded', initData);
+  </script>
 </body>
 </html>
