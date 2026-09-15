@@ -78,5 +78,45 @@
     "content_fa": "مشهورترین و برجسته‌ترین اثر داستانی ادبیات معاصر ایران نوشته صادق هدایت.",
     "content_en": "The magnum opus of Iranian author Sadegh Hedayat and a major literary work of 20th-century Persian literature.",
     "keywords": ["صادق هدایت", "کتاب", "رمان", "داستان", "ادبیات معاصر", "Sadegh Hedayat", "Book"]
+  },
+  {
+    "id": 9,
+    "title_fa": "آمازون",
+    "title_en": "Amazon River",
+    "category_fa": "تاریخ و جغرافیا",
+    "category_en": "History & Geography",
+    "content_fa": "پرآب‌ترین رودخانه جهان در آمریکای جنوبی که از نظر حجم آب رتبه اول را دارد.",
+    "content_en": "The largest river by discharge volume of water in the world, located in South America.",
+    "keywords": ["رود", "برزیل", "جنگل", "آمریکای جنوبی", "Amazon", "River"]
+  },
+  {
+    "id": 10,
+    "title_fa": "کانبرا",
+    "title_en": "Canberra",
+    "category_fa": "اطلاعات عمومی و جدول",
+    "category_en": "General Knowledge",
+    "content_fa": "پایتخت کشور استرالیا که ساخت آن به صورت برنامه‌ریزی‌شده انجام شد.",
+    "content_en": "The capital city of Australia, established following the federation of the colonies.",
+    "keywords": ["پایتخت", "استرالیا", "شهر", "جدول", "Capital", "Australia"]
+  },
+  {
+    "id": 11,
+    "title_fa": "ابوعلی سینا",
+    "title_en": "Avicenna",
+    "category_fa": "ادبیات و مفاخر",
+    "category_en": "Literature",
+    "content_fa": "پزشک، دانشمند و فیلسوف بزرگ ایرانی و نویسنده کتاب‌های القانون فی الطب و الشفاء.",
+    "content_en": "One of the most significant physicians, astronomers, thinkers and writers of the Islamic Golden Age.",
+    "keywords": ["ابن سینا", "طب", "پزشکی", "قانون", "فلسفه", "Avicenna", "Doctor"]
+  },
+  {
+    "id": 12,
+    "title_fa": "الماس",
+    "title_en": "Diamond",
+    "category_fa": "علم و طبیعت",
+    "category_en": "Science & Nature",
+    "content_fa": "سخت‌ترین کانی شناخته‌شده در طبیعت که تماماً از کربن خالص تشکیل شده است.",
+    "content_en": "A solid form of the element carbon with its atoms arranged in a crystal structure called diamond cubic.",
+    "keywords": ["کربن", "جواهر", "کانی", "سنگ", "جدول", "Diamond", "Carbon"]
   }
 ]
