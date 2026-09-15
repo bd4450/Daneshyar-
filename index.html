@@ -5,87 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>دانشیار</title>
     <style>
-        body { font-family: Tahoma, sans-serif; margin: 0; padding: 15px; background: #f4f6f8; direction: rtl; }
-        header { text-align: center; margin-bottom: 20px; }
-        h1 { color: #2c3e50; margin-bottom: 12px; }
-        input { 
-            width: 100%; 
-            max-width: 400px; 
-            padding: 12px 15px; 
-            font-size: 16px; 
-            border: 1px solid #bbb; 
-            border-radius: 8px; 
-            box-sizing: border-box; 
-            outline: none;
-        }
-        input:focus { border-color: #16a085; }
-        .entry-card { background: white; border-radius: 8px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .entry-card h3 { margin: 0 0 8px 0; color: #16a085; }
-        .entry-card p { margin: 0; color: #555; line-height: 1.6; }
+        body { font-family: Tahoma, sans-serif; padding: 20px; line-height: 1.6; }
+        input { width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
+        .result-item { padding: 10px; border-bottom: 1px solid #eee; }
+        .term { font-weight: bold; color: #2c3e50; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>دانشیار</h1>
-        <!-- استفاده از رویداد input برای کارکرد لحظه‌ای روی کیبورد گوشی -->
-        <input type="text" id="searchInput" placeholder="جستجو در دانشنامه...">
-    </header>
-
-    <main id="entriesList"></main>
+    <h1>دانشیار</h1>
+    <input type="text" id="searchInput" placeholder="جستجو کنید (مثال: آزادی)..." oninput="performSearch()">
+    <div id="results"></div>
 
     <script>
-        const entries = [
-            { title: "آب", desc: "ماده‌ای شیمیایی و مرکب از دو عنصر هیدروژن و اکسیژن که بخش اعظم سطح زمین را پوشانده است." },
-            { title: "البرز", desc: "رشته‌کوهی در شمال ایران که بلندترین قله آن دماوند است." },
-            { title: "خورشید", desc: "تنها ستاره منظومه شمسی که مرکز ثقل این منظومه به شمار می‌رود." },
-            { title: "سعدی", desc: "شاعر و نویسنده بزرگ پارسی‌گوی سده هفتم هجری قمری صاحب گلستان و بوستان." }
-        ];
-
-        // یکسان‌سازی حروف ی و ک فارسی و عربی و حذف فاصله‌های اضافه
-        function normalizeText(text) {
-            return text
-                .replace(/ي/g, 'ی')
-                .replace(/ك/g, 'ک')
-                .replace(/[\u200B-\u200D\uFEFF]/g, '') // نیم‌فاصله و کاراکترهای نامرئی
-                .toLowerCase()
-                .trim();
-        }
-
-        function render(items) {
-            const list = document.getElementById('entriesList');
-            list.innerHTML = '';
-            if (!items || items.length === 0) {
-                list.innerHTML = '<p style="text-align:center; color:#888; margin-top:20px;">نتیجه‌ای یافت نشد.</p>';
+        async function performSearch() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const resultsContainer = document.getElementById('results');
+            
+            if (query === "") {
+                resultsContainer.innerHTML = "";
                 return;
             }
-            items.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'entry-card';
-                div.innerHTML = `<h3>${item.title}</h3><p>${item.desc}</p>`;
-                list.appendChild(div);
-            });
-        }
 
-        const searchInput = document.getElementById('searchInput');
-
-        // رویداد input بهترین و مطمئن‌ترین حالت برای تایپ روی موبایل است
-        searchInput.addEventListener('input', function() {
-            const query = normalizeText(this.value);
-            if (!query) {
-                render(entries);
-                return;
+            try {
+                const response = await fetch('data.json');
+                const data = await response.json();
+                
+                const matches = data.filter(item => item.term.toLowerCase().includes(query));
+                
+                resultsContainer.innerHTML = matches.length > 0 
+                    ? matches.map(m => `<div class="result-item"><span class="term">${m.term}:</span> ${m.definition}</div>`).join('')
+                    : "موردی یافت نشد.";
+            } catch (error) {
+                resultsContainer.innerHTML = "خطا در بارگذاری اطلاعات.";
             }
-            const filtered = entries.filter(e => 
-                normalizeText(e.title).includes(query) || 
-                normalizeText(e.desc).includes(query)
-            );
-            render(filtered);
-        });
-
-        // نمایش اولیه همه داده‌ها
-        render(entries);
+        }
     </script>
-
 </body>
 </html>
