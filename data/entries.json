@@ -48,5 +48,35 @@
     "content_fa": "بلندترین کوه و قله روی کره زمین با ارتفاع ۸۸۴۸ متر واقع در رشته‌کوه هیمالیا.",
     "content_en": "Earth's highest mountain above sea level, located in the Mahalangur Himal sub-range of the Himalayas.",
     "keywords": ["کوه", "قله", "هیمالیا", "نپال", "Mountain", "Peak"]
+  },
+  {
+    "id": 6,
+    "title_fa": "یانگ‌تسه",
+    "title_en": "Yangtze River",
+    "category_fa": "تاریخ و جغرافیا",
+    "category_en": "History & Geography",
+    "content_fa": "طولانی‌ترین رودخانه چین و آسیا و سومین رود طولانی جهان که به چانگ جیانگ نیز معروف است.",
+    "content_en": "The longest river in Asia, the third-longest in the world, flowing entirely within China.",
+    "keywords": ["رودخانه", "چین", "چانگ جیانگ", "آسیا", "River", "China", "Yangtze"]
+  },
+  {
+    "id": 7,
+    "title_fa": "هوانگ هو",
+    "title_en": "Yellow River",
+    "category_fa": "تاریخ و جغرافیا",
+    "category_en": "History & Geography",
+    "content_fa": "دومین رودخانه بلند چین و ششمین رودخانه طویل جهان معروف به رود زرد.",
+    "content_en": "The second-longest river in China and the sixth-longest river system in the world.",
+    "keywords": ["رود زرد", "چین", "رودخانه", "Yellow River", "China"]
+  },
+  {
+    "id": 8,
+    "title_fa": "بوف کور",
+    "title_en": "The Blind Owl",
+    "category_fa": "ادبیات و مفاخر",
+    "category_en": "Literature",
+    "content_fa": "مشهورترین و برجسته‌ترین اثر داستانی ادبیات معاصر ایران نوشته صادق هدایت.",
+    "content_en": "The magnum opus of Iranian author Sadegh Hedayat and a major literary work of 20th-century Persian literature.",
+    "keywords": ["صادق هدایت", "کتاب", "رمان", "داستان", "ادبیات معاصر", "Sadegh Hedayat", "Book"]
   }
 ]
