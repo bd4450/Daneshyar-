@@ -12,8 +12,8 @@
       --text-secondary: #64748b;
       --primary: #2563eb;
       --primary-hover: #1d4ed8;
-      --border-color: #e2e8f0;
-      --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      --border-color: #cbd5e1;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
       --badge-bg: #eff6ff;
       --badge-color: #1d4ed8;
     }
@@ -71,21 +71,28 @@
     .theme-toggle {
       background: none;
       border: 1px solid var(--border-color);
-      padding: 6px 12px;
+      padding: 8px 14px;
       border-radius: 20px;
       color: var(--text-primary);
       cursor: pointer;
       font-size: 0.85rem;
     }
 
-    .search-box {
+    /* نوار جستجو به همراه دکمه اختصاصی */
+    .search-container {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    .search-input-wrapper {
       position: relative;
-      margin-bottom: 20px;
+      flex: 1;
     }
 
     .search-input {
       width: 100%;
-      padding: 14px 16px;
+      padding: 12px 38px 12px 14px;
       font-size: 1rem;
       border: 2px solid var(--border-color);
       border-radius: 12px;
@@ -97,6 +104,39 @@
 
     .search-input:focus {
       border-color: var(--primary);
+    }
+
+    .clear-btn {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: none;
+    }
+
+    .btn-search {
+      background-color: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      padding: 0 20px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: var(--shadow);
+      white-space: nowrap;
+    }
+
+    .btn-search:active {
+      opacity: 0.85;
     }
 
     .stats-bar {
@@ -129,7 +169,7 @@
     }
 
     .card-title {
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       font-weight: bold;
       color: var(--primary);
     }
@@ -137,7 +177,7 @@
     .card-subtitle {
       font-size: 0.85rem;
       color: var(--text-secondary);
-      margin-left: 6px;
+      margin-right: 6px;
     }
 
     .badge {
@@ -165,7 +205,7 @@
       background-color: var(--bg-color);
       border: 1px solid var(--border-color);
       color: var(--text-secondary);
-      padding: 2px 8px;
+      padding: 3px 8px;
       border-radius: 6px;
       font-size: 0.75rem;
     }
@@ -174,6 +214,7 @@
       text-align: center;
       padding: 40px 20px;
       color: var(--text-secondary);
+      line-height: 1.8;
     }
   </style>
 </head>
@@ -186,12 +227,20 @@
     <button class="theme-toggle" id="themeBtn">🌙 حالت شب</button>
   </header>
 
-  <div class="search-box">
-    <input type="text" id="searchInput" class="search-input" placeholder="جستجو در کلمات، تعریف‌ها، جدول و عبارت‌ها..." autocomplete="off">
+  <!-- بخش جستجو همراه با دکمه اختصاصی -->
+  <div class="search-container">
+    <div class="search-input-wrapper">
+      <input type="text" id="searchInput" class="search-input" placeholder="عبارت، کلمه جدول یا پاسخ مورد نظر..." autocomplete="off">
+      <button id="clearBtn" class="clear-btn" title="پاک کردن">✕</button>
+    </div>
+    <button id="searchBtn" class="btn-search">
+      <span>🔍</span>
+      <span>جستجو</span>
+    </button>
   </div>
 
   <div class="stats-bar">
-    <span id="resultCount">در حال دریافت اطلاعات...</span>
+    <span id="resultCount">در حال بارگذاری دانشنامه...</span>
     <span>نسخه ۱.۰</span>
   </div>
 
@@ -200,30 +249,32 @@
   <script>
     let encyclopediaData = [];
     const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const clearBtn = document.getElementById('clearBtn');
     const resultsList = document.getElementById('resultsList');
     const resultCount = document.getElementById('resultCount');
     const themeBtn = document.getElementById('themeBtn');
 
-    // بارگذاری داده‌ها از فایل JSON
+    // بارگذاری فایل داده‌ها
     async function initData() {
       try {
         const res = await fetch('data/entries.json');
-        if (!res.ok) throw new Error('خطا در دریافت فایل داده‌ها');
+        if (!res.ok) throw new Error('عدم دسترسی به دیتابیس');
         encyclopediaData = await res.json();
         renderResults(encyclopediaData);
       } catch (err) {
-        resultCount.textContent = 'خطا در بارگذاری داده‌ها.';
+        resultCount.textContent = 'خطا در بارگذاری اطلاعات. لطفاً اتصال را بررسی کنید.';
         console.error(err);
       }
     }
 
-    // رندر کارت‌ها
+    // رندر کارت‌های یافته‌شده
     function renderResults(items) {
       resultsList.innerHTML = '';
       resultCount.textContent = `تعداد یافته‌ها: ${items.length} مورد`;
 
       if (items.length === 0) {
-        resultsList.innerHTML = '<div class="empty-state">نتیجه‌ای برای این عبارت پیدا نشد.</div>';
+        resultsList.innerHTML = '<div class="empty-state">موردی یافت نشد.<br>کلمه دیگری را امتحان کنید.</div>';
         return;
       }
 
@@ -241,7 +292,7 @@
               <span class="card-title">${item.title_fa}</span>
               ${item.title_en ? `<span class="card-subtitle">(${item.title_en})</span>` : ''}
             </div>
-            <span class="badge">${item.category_fa || 'اطلاعات عمومی'}</span>
+            <span class="badge">${item.category_fa || 'عمومی'}</span>
           </div>
           <div class="card-content">${item.content_fa || item.desc || ''}</div>
           <div class="keywords">${keywordsHTML}</div>
@@ -250,9 +301,10 @@
       });
     }
 
-    // موتور جستجوی لحظه‌ای
-    searchInput.addEventListener('input', (e) => {
-      const q = e.target.value.trim().toLowerCase();
+    // تابع اصلی اجرای جستجو
+    function executeSearch() {
+      const q = searchInput.value.trim().toLowerCase();
+      
       if (!q) {
         renderResults(encyclopediaData);
         return;
@@ -271,9 +323,37 @@
       });
 
       renderResults(filtered);
+    }
+
+    // کلیک روی دکمه اختصاصی جستجو
+    searchBtn.addEventListener('click', executeSearch);
+
+    // زدن کلید Enter روی کیبورد گوشی
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        executeSearch();
+      }
     });
 
-    // سوییچ تم (تیره / روشن)
+    // نمایش یا عدم نمایش دکمه ضربدر پاک‌کردن
+    searchInput.addEventListener('input', (e) => {
+      if (e.target.value.length > 0) {
+        clearBtn.style.display = 'block';
+      } else {
+        clearBtn.style.display = 'none';
+        renderResults(encyclopediaData);
+      }
+    });
+
+    // عملکرد دکمه ضربدر
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      clearBtn.style.display = 'none';
+      searchInput.focus();
+      renderResults(encyclopediaData);
+    });
+
+    // حالت شب و روز
     themeBtn.addEventListener('click', () => {
       const isDark = document.body.getAttribute('data-theme') === 'dark';
       if (isDark) {
@@ -285,7 +365,6 @@
       }
     });
 
-    // شروع کار
     document.addEventListener('DOMContentLoaded', initData);
   </script>
 </body>
