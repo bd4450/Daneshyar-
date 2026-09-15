@@ -13,30 +13,31 @@
             margin: 0;
             padding: 16px;
             background-color: #f4f6f9;
-            color: #333;
+            color: #222;
         }
         .header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
         .header h1 {
             margin: 0;
-            font-size: 24px;
+            font-size: 22px;
             color: #1a73e8;
         }
         .header p {
-            margin: 5px 0 0;
-            font-size: 13px;
+            margin: 4px 0 0;
+            font-size: 12px;
             color: #666;
         }
         .search-container {
             display: flex;
             gap: 8px;
+            margin-bottom: 16px;
         }
         .search-box {
             flex: 1;
             padding: 12px;
-            font-size: 16px;
+            font-size: 15px;
             border: 2px solid #1a73e8;
             border-radius: 10px;
             outline: none;
@@ -48,34 +49,85 @@
             border: none;
             padding: 0 16px;
             border-radius: 10px;
-            font-size: 15px;
+            font-size: 14px;
+            font-weight: bold;
             cursor: pointer;
         }
         #results {
-            margin-top: 20px;
             display: flex;
             flex-direction: column;
             gap: 12px;
         }
         .card {
             background: #fff;
-            padding: 16px;
-            border-radius: 12px;
+            padding: 14px;
+            border-radius: 10px;
             border: 1px solid #e2e8f0;
             box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .card:active {
+            background-color: #eef4ff;
         }
         .card h3 {
-            margin: 0 0 8px 0;
-            font-size: 17px;
+            margin: 0 0 6px 0;
+            font-size: 16px;
             color: #1a73e8;
         }
         .card p {
             margin: 0;
-            font-size: 14px;
-            line-height: 1.7;
-            color: #444;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #555;
         }
-        .loading, .no-result {
+        .badge {
+            display: inline-block;
+            margin-top: 8px;
+            font-size: 11px;
+            color: #1a73e8;
+            font-weight: bold;
+        }
+        /* استایل نمایش مقاله کامل */
+        .article-view {
+            background: #fff;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #d0d7de;
+        }
+        .article-view h2 {
+            margin-top: 0;
+            color: #1a73e8;
+            font-size: 20px;
+            border-bottom: 2px solid #f0f4f9;
+            padding-bottom: 8px;
+        }
+        .article-view img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: block;
+        }
+        .article-view .content {
+            font-size: 14px;
+            line-height: 1.9;
+            color: #333;
+            text-align: justify;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 12px;
+            padding: 6px 12px;
+            background: #e8f0fe;
+            color: #1a73e8;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: bold;
+            border: none;
+        }
+        .msg {
             text-align: center;
             color: #777;
             font-size: 14px;
@@ -87,62 +139,103 @@
 
     <div class="header">
         <h1>دانشیار</h1>
-        <p>دانشنامه جامع عمومی و حل جدول</p>
+        <p>دانشنامه جامع و مرجع اطلاعات عمومی</p>
     </div>
 
     <div class="search-container">
-        <input type="text" id="searchInput" class="search-box" placeholder="جستجوی هر موضوع، کلمه، شهر، دانشمند...">
+        <input type="text" id="searchInput" class="search-box" placeholder="جستجو (مثلاً: ابوعلی سینا، حافظ، پاریس...)">
         <button class="btn-search" onclick="searchEncyclopedia()">جستجو</button>
     </div>
 
     <div id="results"></div>
 
     <script>
-        // اجازه جستجو با زدن دکمه Enter در کیبورد گوشی
-        document.getElementById("searchInput").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                searchEncyclopedia();
-            }
+        let lastSearchResults = [];
+
+        document.getElementById("searchInput").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") searchEncyclopedia();
         });
 
+        // ۱. جستجوی عناوین مرتبط
         async function searchEncyclopedia() {
             const query = document.getElementById('searchInput').value.trim();
             const resultsBox = document.getElementById('results');
 
             if (!query) {
-                resultsBox.innerHTML = '<div class="no-result">لطفاً کلمه‌ای برای جستجو بنویسید.</div>';
+                resultsBox.innerHTML = '<div class="msg">لطفاً کلمه‌ای برای جستجو وارد کنید.</div>';
                 return;
             }
 
-            resultsBox.innerHTML = '<div class="loading">در حال جستجو در میلیون‌ها مدخل دانشنامه...</div>';
+            resultsBox.innerHTML = '<div class="msg">در حال جستجو در پایگاه دانشنامه...</div>';
 
             try {
-                // جستجو در وب‌سرویس دانشنامه آزاد فارسی (ویکی‌پدیا)
                 const url = `https://fa.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`;
-                const response = await fetch(url);
-                const data = await response.json();
+                const res = await fetch(url);
+                const data = await res.json();
+                const list = data.query.search;
 
-                const searchList = data.query.search;
-
-                if (!searchList || searchList.length === 0) {
-                    resultsBox.innerHTML = '<div class="no-result">موردی برای این عنوان یافت نشد.</div>';
+                if (!list || list.length === 0) {
+                    resultsBox.innerHTML = '<div class="msg">موردی برای این عبارت یافت نشد.</div>';
                     return;
                 }
 
-                // نمایش خلاصه تمام مقالات مرتبط پیدا شده
-                resultsBox.innerHTML = searchList.map(item => {
-                    // حذف تگ‌های اضافه HTML که سرور برمی‌گرداند
-                    const cleanSnippet = item.snippet.replace(/<[^>]*>?/gm, '');
-                    return `
-                        <div class="card">
-                            <h3>${item.title}</h3>
-                            <p>${cleanSnippet} ...</p>
-                        </div>
-                    `;
-                }).join('');
+                lastSearchResults = list;
+                showList(list);
 
-            } catch (error) {
-                resultsBox.innerHTML = '<div class="no-result">خطا در برقراری ارتباط با پایگاه داده دانشنامه. لطفاً دوباره تلاش کنید.</div>';
+            } catch (err) {
+                resultsBox.innerHTML = '<div class="msg">خطا در برقراری ارتباط. اتصال اینترنت را بررسی کنید.</div>';
+            }
+        }
+
+        // نمایش لیست نتایج
+        function showList(list) {
+            const resultsBox = document.getElementById('results');
+            resultsBox.innerHTML = list.map((item, index) => {
+                const cleanSnippet = item.snippet.replace(/<[^>]*>?/gm, '');
+                return `
+                    <div class="card" onclick="loadFullArticle('${encodeURIComponent(item.title)}')">
+                        <h3>${item.title}</h3>
+                        <p>${cleanSnippet}...</p>
+                        <span class="badge">👈 مشاهده متن و اطلاعات کامل</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ۲. دریافت متن کامل و جامع مقاله انتخاب شده
+        async function loadFullArticle(encodedTitle) {
+            const resultsBox = document.getElementById('results');
+            resultsBox.innerHTML = '<div class="msg">در حال دریافت اطلاعات جامع مقاله...</div>';
+
+            const title = decodeURIComponent(encodedTitle);
+
+            try {
+                const url = `https://fa.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages&exintro=false&explaintext=true&piprop=original&titles=${encodeURIComponent(title)}&format=json&origin=*`;
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                const pages = data.query.pages;
+                const pageId = Object.keys(pages)[0];
+                const pageData = pages[pageId];
+
+                let imageHtml = '';
+                if (pageData.original && pageData.original.source) {
+                    imageHtml = `<img src="${pageData.original.source}" alt="${title}">`;
+                }
+
+                const fullText = pageData.extract ? pageData.extract.replace(/\n/g, '<br><br>') : 'توضیحات بیشتری ثبت نشده است.';
+
+                resultsBox.innerHTML = `
+                    <div class="article-view">
+                        <button class="back-btn" onclick="showList(lastSearchResults)">⬅ بازگشت به لیست نتایج</button>
+                        <h2>${title}</h2>
+                        ${imageHtml}
+                        <div class="content">${fullText}</div>
+                    </div>
+                `;
+
+            } catch (err) {
+                resultsBox.innerHTML = '<div class="msg">خطا در دریافت متن کامل مقاله.</div>';
             }
         }
     </script>
