@@ -5,41 +5,122 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>دانشیار</title>
     <style>
-        body { font-family: Tahoma, sans-serif; padding: 20px; line-height: 1.6; }
-        input { width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
-        .result-item { padding: 10px; border-bottom: 1px solid #eee; }
-        .term { font-weight: bold; color: #2c3e50; }
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, Tahoma, sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 16px;
+            background-color: #f7f9fa;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #1a73e8;
+        }
+        .header p {
+            margin: 5px 0 0;
+            font-size: 13px;
+            color: #666;
+        }
+        .search-box {
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            border: 2px solid #1a73e8;
+            border-radius: 12px;
+            outline: none;
+            background-color: #fff;
+        }
+        #results {
+            margin-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .card {
+            background: #fff;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .term {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1a73e8;
+            margin-bottom: 4px;
+        }
+        .definition {
+            font-size: 14px;
+            color: #444;
+            line-height: 1.6;
+        }
+        .no-result {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
 
-    <h1>دانشیار</h1>
-    <input type="text" id="searchInput" placeholder="جستجو کنید (مثال: آزادی)..." oninput="performSearch()">
+    <div class="header">
+        <h1>دانشیار</h1>
+        <p>دانشنامه جامع و حل جدول</p>
+    </div>
+
+    <input type="text" id="searchInput" placeholder="کلمه مورد نظر را تایپ کنید..." oninput="searchData()">
+
     <div id="results"></div>
 
     <script>
-        async function performSearch() {
+        let allData = [];
+
+        // دریافت یک‌باره اطلاعات در ابتدای باز شدن صفحه
+        fetch('data.json')
+            .then(res => res.json())
+            .then(data => {
+                allData = data;
+            })
+            .catch(err => {
+                console.error("خطا در بارگذاری data.json:", err);
+            });
+
+        function searchData() {
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
-            const resultsContainer = document.getElementById('results');
-            
+            const resultsBox = document.getElementById('results');
+
             if (query === "") {
-                resultsContainer.innerHTML = "";
+                resultsBox.innerHTML = "";
                 return;
             }
 
-            try {
-                const response = await fetch('data.json');
-                const data = await response.json();
-                
-                const matches = data.filter(item => item.term.toLowerCase().includes(query));
-                
-                resultsContainer.innerHTML = matches.length > 0 
-                    ? matches.map(m => `<div class="result-item"><span class="term">${m.term}:</span> ${m.definition}</div>`).join('')
-                    : "موردی یافت نشد.";
-            } catch (error) {
-                resultsContainer.innerHTML = "خطا در بارگذاری اطلاعات.";
+            const matches = allData.filter(item => 
+                item.term.toLowerCase().includes(query) || 
+                item.definition.toLowerCase().includes(query)
+            );
+
+            if (matches.length === 0) {
+                resultsBox.innerHTML = '<div class="no-result">موردی یافت نشد.</div>';
+                return;
             }
+
+            resultsBox.innerHTML = matches.map(item => `
+                <div class="card">
+                    <div class="term">${item.term}</div>
+                    <div class="definition">${item.definition}</div>
+                </div>
+            `).join('');
         }
     </script>
+
 </body>
 </html>
