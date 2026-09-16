@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشیار - دانشنامه و حل جدول</title>
+    <style>
+        * { box-sizing: border-box; font-family: Tahoma, Arial, sans-serif; }
+        body { background-color: #f3f4f6; margin: 0; padding: 15px; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #1a568c; font-size: 22px; margin-top: 0; }
+        .input-group { display: flex; gap: 8px; margin-bottom: 15px; }
+        input[type="text"] { flex: 1; padding: 12px; border: 2px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; }
+        input[type="text"]:focus { border-color: #1a568c; }
+        button { padding: 12px 20px; background: #1a568c; color: #fff; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        #result { margin-top: 15px; }
+        .card { background: #fafafa; border: 1px solid #e0e0e0; border-right: 4px solid #1a568c; border-radius: 6px; padding: 12px; margin-bottom: 10px; }
+        .card h3 { margin: 0 0 5px 0; font-size: 16px; color: #1a568c; }
+        .card p { margin: 0; font-size: 14px; line-height: 1.6; color: #444; }
+        .loading { text-align: center; color: #777; padding: 20px; }
+        .error { color: #c0392b; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>دانشیار (راهنمای جدول و دانشنامه)</h1>
+    
+    <div class="input-group">
+        <input type="text" id="searchInput" placeholder="مثال: جزایر ژاپن، پایتخت فرانسه...">
+        <button onclick="startSearch()">جستجو</button>
+    </div>
+
+    <div id="result">
+        برای دریافت پاسخ، عبارت مورد نظر خود را وارد کنید.
+    </div>
+</div>
+
+<script>
+async function startSearch() {
+    const input = document.getElementById('searchInput');
+    const query = input.value.trim();
+    const resultDiv = document.getElementById('result');
+
+    if (!query) {
+        resultDiv.innerHTML = '<div class="error">لطفاً عبارتی را برای جستجو وارد کنید.</div>';
+        return;
+    }
+
+    resultDiv.innerHTML = '<div class="loading">در حال جستجو در دانشنامه...</div>';
+
+    try {
+        const url = `https://fa.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&utf8=&format=json&origin=*`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.query && data.query.search && data.query.search.length > 0) {
+            let output = '';
+            data.query.search.slice(0, 6).forEach(item => {
+                // حذف برچسب‌های اضافی HTML از متن
+                const cleanSnippet = item.snippet.replace(/<[^>]*>?/gm, '');
+                output += `
+                    <div class="card">
+                        <h3>${item.title}</h3>
+                        <p>${cleanSnippet}...</p>
+                    </div>
+                `;
+            });
+            resultDiv.innerHTML = output;
+        } else {
+            resultDiv.innerHTML = '<div class="error">موردی یافت نشد. عبارت را کمی ساده‌تر بنویسید.</div>';
+        }
+    } catch (e) {
+        resultDiv.innerHTML = '<div class="error">خطا در برقراری ارتباط با دانشنامه. اتصال اینترنت را بررسی کنید.</div>';
+    }
+}
+
+document.getElementById('searchInput').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') startSearch();
+});
+</script>
+
+</body>
+</html>
