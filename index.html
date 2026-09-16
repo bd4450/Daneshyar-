@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>دانشیار - حل دقیق جدول کلمات</title>
+    <style>
+        * { box-sizing: border-box; font-family: Tahoma, 'Segoe UI', sans-serif; }
+        body { background: #f8fafc; margin: 0; padding: 12px; color: #1e293b; }
+        .container { max-width: 650px; margin: 0 auto; }
+        
+        .header { text-align: center; margin: 10px 0 15px; }
+        .header h1 { margin: 0; color: #1d4ed8; font-size: 22px; }
+        .header p { margin: 4px 0 0; color: #64748b; font-size: 13px; }
+
+        /* جعبه جستجو */
+        .search-box {
+            background: #ffffff;
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+            margin-bottom: 12px;
+        }
+        .row-input { display: flex; gap: 6px; margin-bottom: 8px; }
+        .search-input {
+            flex: 1;
+            padding: 12px 14px;
+            font-size: 16px;
+            border: 2px solid #2563eb;
+            border-radius: 8px;
+            outline: none;
+        }
+        .btn-search {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            padding: 0 18px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-search:active { background: #1e40af; }
+        .btn-clear {
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #cbd5e1;
+            padding: 0 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* فیلتر تعداد حروف برای جدول */
+        .filter-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #475569;
+            padding-top: 4px;
+            border-top: 1px dashed #e2e8f0;
+        }
+        .letter-select {
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            font-size: 13px;
+            outline: none;
+        }
+
+        /* نمایش کارت پاسخ جدول */
+        .card {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            border-right: 5px solid #2563eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .answer-main {
+            font-size: 18px;
+            font-weight: bold;
+            color: #0f172a;
+        }
+        .answer-clue {
+            font-size: 13px;
+            color: #475569;
+            margin-top: 4px;
+        }
+        .letter-badge {
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+
+        .status {
+            font-size: 13px;
+            color: #64748b;
+            margin: 10px 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .msg-box {
+            text-align: center;
+            padding: 25px 15px;
+            background: #fff;
+            border-radius: 10px;
+            color: #64748b;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>دانشیار</h1>
+        <p>راهنمای پاسخ‌های کوتاه و مستقیم جدول کلمات متقاطع</p>
+    </div>
+
+    <div class="search-box">
+        <div class="row-input">
+            <input type="text" id="txtInput" class="search-input" placeholder="راهنمای جدول یا کلمه را بنویسید..." autofocus>
+            <button class="btn-search" onclick="findCrossword()">جستجو</button>
+            <button class="btn-clear" onclick="clearAll()">پاک</button>
+        </div>
+        <div class="filter-row">
+            <span>فیلتر تعداد حروف جواب:</span>
+            <select id="letterCount" class="letter-select" onchange="findCrossword()">
+                <option value="all">همه طول‌ها</option>
+                <option value="2">۲ حرفی</option>
+                <option value="3">۳ حرفی</option>
+                <option value="4">۴ حرفی</option>
+                <option value="5">۵ حرفی</option>
+                <option value="6">۶ حرفی</option>
+                <option value="7">۷ حرفی</option>
+                <option value="8">۸ حرفی به بالا</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="status">
+        <span id="statusText">آماده جستجوی پاسخ‌های جدول</span>
+    </div>
+
+    <div id="resultList">
+        <div class="msg-box">
+            کلمه یا سوال جدول (مثل: پایتخت، اثر، شاعر، رود، مخترع، نام کهن و...) را وارد کنید.
+        </div>
+    </div>
+</div>
+
+<script>
+    // بانک فوق‌العاده جامع کلیدواژه‌های پرتکرار و رسمی جداول متقاطع فارسی
+    const crosswordDB = [
+        // جغرافیا، شهرها و پایتخت‌ها
+        { a: "اسلو", q: "پایتخت نروژ", cat: "جغرافیا" },
+        { a: "اتاوا", q: "پایتخت کانادا", cat: "جغرافیا" },
+        { a: "رم", q: "پایتخت ایتالیا - شهر ابدی", cat: "جغرافیا" },
+        { a: "پکن", q: "پایتخت چین", cat: "جغرافیا" },
+        { a: "سئول", q: "پایتخت کره جنوبی", cat: "جغرافیا" },
+        { a: "توکیو", q: "پایتخت ژاپن", cat: "جغرافیا" },
+        { a: "باکو", q: "پایتخت جمهوری آذربایجان", cat: "جغرافیا" },
+        { a: "پاریس", q: "پایتخت فرانسه - عروس شهرها", cat: "جغرافیا" },
+        { a: "لندن", q: "پایتخت انگلستان - شهر مه آلود", cat: "جغرافیا" },
+        { a: "برلین", q: "پایتخت آلمان", cat: "جغرافیا" },
+        { a: "مادرید", q: "پایتخت اسپانیا", cat: "جغرافیا" },
+        { a: "وین", q: "پایتخت اتریش - شهر موسیقی", cat: "جغرافیا" },
+        { a: "کابل", q: "پایتخت افغانستان", cat: "جغرافیا" },
+        { a: "بغداد", q: "پایتخت عراق", cat: "جغرافیا" },
+        { a: "دمشق", q: "پایتخت سوریه", cat: "جغرافیا" },
+        { a: "بیروت", q: "پایتخت لبنان - عروس خاورمیانه", cat: "جغرافیا" },
+        { a: "امان", q: "پایتخت اردن", cat: "جغرافیا" },
+        { a: "قاهره", q: "پایتخت مصر", cat: "جغرافیا" },
+        { a: "انکارا", q: "پایتخت ترکیه", cat: "جغرافیا" },
+        { a: "مسکو", q: "پایتخت روسیه", cat: "جغرافیا" },
+        { a: "کارون", q: "طولانی‌ترین و پرآب‌ترین رود ایران", cat: "جغرافیا" },
+        { a: "ارس", q: "رود مرزی شمال غرب ایران", cat: "جغرافیا" },
+        { a: "جیحون", q: "رود آمودریا", cat: "جغرافیا" },
+        { a: "سیحون", q: "رود سیردریا", cat: "جغرافیا" },
+        { a: "دماوند", q: "بلندترین قله ایران", cat: "جغرافیا" },
+        { a: "سبلان", q: "دومین قله بلند ایران در اردبیل", cat: "جغرافیا" },
+        { a: "سهند", q: "کوه آتشفشانی خاموش در مراغه و تبریز", cat: "جغرافیا" },
+        { a: "دنا", q: "بلندترین چین‌خوردگی رشته‌کوه زاگرس", cat: "جغرافیا" },
+        { a: "تفتان", q: "قله آتشفشانی نیمه‌فعال در سیستان و بلوچستان", cat: "جغرافیا" },
+        { a: "اورست", q: "بلندترین قله جهان در هیمالیا", cat: "جغرافیا" },
+        { a: "بایکال", q: "عمیق‌ترین دریاچه آب شیرین جهان در روسیه", cat: "جغرافیا" },
+        { a: "خزر", q: "بزرگترین دریاچه جهان (دریای مازندران)", cat: "جغرافیا" },
+
+        // ادبیات، شاعران و نویسندگان
+        { a: "فردوسی", q: "سراینده شاهنامه - دهقان طوس", cat: "ادبیات" },
+        { a: "حافظ", q: "لسان الغیب - غزلسرای بزرگ شیراز", cat: "ادبیات" },
+        { a: "سعدی", q: "استاد سخن - صاحب گلستان و بوستان", cat: "ادبیات" },
+        { a: "مولوی", q: "خالق مثنوی معنوی و دیوان شمس", cat: "ادبیات" },
+        { a: "نظامی", q: "صاحب پنج گنج (خمسه)", cat: "ادبیات" },
+        { a: "خیام", q: "ریاضیدان، فیلسوف و سراینده رباعیات", cat: "ادبیات" },
+        { a: "عطار", q: "سراینده منطق الطیر و تذکرة الاولیا", cat: "ادبیات" },
+        { a: "سنایی", q: "سراینده حدیقة الحقیقه", cat: "ادبیات" },
+        { a: "جامی", q: "صاحب هفت اورنگ و بهارستان", cat: "ادبیات" },
+        { a: "نیما یوشیج", q: "پدر شعر نو فارسی (علی اسفندیاری)", cat: "ادبیات" },
+        { a: "شهریار", q: "سراینده حیدربابایه سلام و همای رحمت", cat: "ادبیات" },
+        { a: "صائب", q: "بزرگترین شاعر سبک هندی (تبریزی)", cat: "ادبیات" },
+        { a: "بوف کور", q: "معروف‌ترین رمان صادق هدایت", cat: "ادبیات" },
+        { a: "کلیدر", q: "طولانی‌ترین رمان فارسی اثر محمود دولت‌آبادی", cat: "ادبیات" },
+        { a: "شازده کوچولو", q: "اثر جاودان آنتوان دو سنت اگزوپری", cat: "ادبیات" },
+        { a: "بینوایان", q: "شاهکار ویکتور هوگو", cat: "ادبیات" },
+        { a: "کمدی الهی", q: "شاهکار دانته آلیگیری", cat: "ادبیات" },
+
+        // تاریخ، ایران باستان و مشاهیر
+        { a: "کوروش", q: "بنیانگذار سلسله هخامنشیان و صادرکننده نخستین منشور حقوق بشر", cat: "تاریخ" },
+        { a: "داریوش", q: "شاه بزرگ هخامنشی سازنده پرسپولیس و راه شاهی", cat: "تاریخ" },ای رحمت", cat: "ادبیات" },
+        { a: "صائب", q: "بزرگترین شاعر سبک هندی (تبریزی)", cat: "ادبیات" },
+        { a: "بوف کور", q: "معروف‌ترین رمان صادق هدایت", cat: "ادبیات" },
+        { a: "کلیدر", q: "طولانی‌ترین رمان فارسی اثر محمود دولت‌آبادی", cat: "ادبیات" },
+        { a: "شازده کوچولو", q: "اثر جاودان آنتوان دو سنت اگزوپری", cat: "ادبیات" },
+        { a: "بینوایان", q: "شاهکار ویکتور هوگو", cat: "ادبیات" },
+        { a: "کمدی الهی", q: "شاهکار دانته آلیگیری", cat: "ادبیات" },
+
+        // تاریخ، ایران باستان و مشاهیر
+        { a: "کوروش", q: "بنیانگذار سلسله هخامنشیان و صادرکننده نخستین منشور حقوق بشر", cat: "تاریخ" },
+        { a: "داریوش", q: "شاه بزرگ هخامنشی سازنده پرسپولیس و راه شاهی", cat: "تاریخ" },
+        { a: "تخت جمشید", q: "پرسپولیس، پایتخت باشکوه هخامنشی", cat: "تاریخ" },
+        { a: "پاسارگاد", q: "آرامگاه کوروش بزرگ در فارس", cat: "تاریخ" },
+        { a: "ارگ بم", q: "بزرگترین سازه خشتی جهان", cat: "تاریخ" },
+        { a: "ابوعلی سینا", qادر در عربی", cat: "لغت" },
+        { a: "اخت", q: "خواهر در عربی", cat: "لغت" },
+        { a: "سن", q: "دندان در عربی", cat: "لغت" },
+        { a: "انف", q: "بینی در عربی", cat: "لغت" },
+        { a: "عین", q: "چشم یا چشمه در عربی", cat: "لغت" },
+        { a: "فم", q: "دهان در عربی", cat: "لغت" },
+        { a: "رجاء", q: "امید و آرزو", cat: "لغت" },
+        { a: "ایما", q: "اشاره و کنایه", cat: "لغت" },
+        { a: "افعی", q: "نوعی مار سمی و خطرناک", cat: "جانوران" },
+        { a: "شترمرغ", q: "بزرگترین پرنده زنده جهان", cat: "جانوران" },
+        { a: "سمندر", q: "جانور دوزیست شبیه مارمولک", cat: "جانوران" },
+        { a: "پنگوئن", q: "پرنده شناگر قطب جنوب", cat: "جانوران" },
+        { a: "آهنگر", q: "پیشه کاوه در شاهنامه", cat: "عمومی" },
+        { a: "ضحاک", q: "پادشاه ماردوش شاهنامه", cat: "ادبیات" },
+        { a: "رستم", q: "تهمتن، پهلوان نامدار شاهنامه", cat: "ادبیات" },
+        { a: "سهراب", q: "فرزند رستم و تهمینه", cat: "ادبیات" },
+        { a: "رخش", q: "اسب باوفای رستم", cat: "ادبیات" },
+        { a: "سیمرغ", q: "پرنده افسانه‌ای کوه قاف و شاهنامه", cat: "ادبیات" }
+    ];
+
+    function cleanStr(s) {
+        if (!s) return "";
+        return s.toString()
+            .replace(/[\u064B-\u065F]/g, "")
+            .replace(/ي/g, "ی")
+            .replace(/ك/g, "ک")
+            .replace(/ة/g, "ه")
+            .replace(/[\u200c\u200b]/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+    }
+
+    // محاسبه تعداد حروف بدون فاصله‌ها
+    function getCharCount(str) {
+        return str.replace(/\s+/g, "").length;
+    }
+
+    async function findCrossword() {
+        const input = document.getElementById("txtInput");
+        const raw = input.value.trim();
+        const q = cleanStr(raw);
+        const filterLen = document.getElementById("letterCount").value;
+        const resultList = document.getElementById("resultList");
+        const statusText = document.getElementById("statusText");
+
+        if (!q) {
+            statusText.innerText = "لطفاً سوال یا کلمه را وارد کنید";
+            return;
+        }
+
+        statusText.innerText = "در حال یافتن پاسخ جدول...";
+        resultList.innerHTML = '<div class="msg-box">در حال پردازش پاسخ‌های کوتاه و مستقیم...</div>';
+
+        let directAnswers = [];
+
+        // گام ۱: جستجوی پاسخی در دیتابیس جداول
+        crosswordDB.forEach(item => {
+            const matchAnswer = cleanStr(item.a).includes(q);
+            const matchClue = cleanStr(item.q).includes(q);
+            const matchCat = cleanStr(item.cat).includes(q);
+
+            if (matchAnswer || matchClue || matchCat) {
+                directAnswers.push({
+                    ans: item.a,
+                    clue: item.q + " (" + item.cat + ")",
+                    len: getCharCount(item.a)
+                });
+            }
+        });
+
+        // گام ۲: جستجوی کلمات و معانی از منابع برخط با تمرکز روی پاسخ‌های کوتاه
+        try {
+            const url = `https://fa.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(raw)}&format=json&origin=*&utf8=1&srlimit=10`;
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (data && data.query && data.query.search) {
+                data.query.search.forEach(item => {
+                    const title = item.title;
+                    const cleanTitle = cleanStr(title);
+                    
+                    // استخراج عبارات مفید و کوتاه جدول
+                    if (!directAnswers.some(x => cleanStr(x.ans) === cleanTitle)) {
+                        let desc = item.snippet.replace(/<\/?[^>]+(>|$)/g, "");
+                        // خلاصه‌سازی برای راهنمای جدول
+                        if (desc.length > 80) desc = desc.substring(0, 80) + "...";
+                        
+                        directAnswers.push({
+                            ans: title,
+                            clue: desc,
+                            len: getCharCount(title)
+                        });
+                    }
+                });
+            }
+        } catch(e) {}
+
+        // اعمال فیلتر تعداد حروف (در صورت انتخاب کاربر)
+        let filtered = directAnswers;
+        if (filterLen !== "all") {
+            const targetLen = parseInt(filterLen);
+            if (targetLen >= 8) {
+                filtered = directAnswers.filter(x => x.len >= 8);
+            } else {
+                filtered = directAnswers.filter(x => x.len === targetLen);
+            }
+        }
+
+        resultList.innerHTML = "";
+
+        if (filtered.length === 0) {
+            statusText.innerText = "موردی پیدا نشد";
+            resultList.innerHTML = `
+                <div class="msg-box">
+                    پاسخی متناسب با عبارت «${raw}» ${filterLen !== 'all' ? `با ${filterLen} حرف` : ''} پیدا نشد.<br>
+                    می‌توانید کلمه را خلاصه‌تر جستجو کنید یا فیلتر حروف را روی «همه طول‌ها» بگذارید.
+                </div>`;
+            return;
+        }
+
+        statusText.innerText = `تعداد پاسخ‌های یافت شده: ${filtered.length} مورد`;
+
+        filtered.forEach(item => {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = `
+                <div>
+                    <div class="answer-main">${item.ans}</div>
+                    <div class="answer-clue">${item.clue}</div>
+                </div>
+                <div class="letter-badge">${item.len} حرفی</div>
+            `;
+            resultList.appendChild(card);
+        });
+    }
+
+    function clearAll() {
+        document.getElementById("txtInput").value = "";
+        document.getElementById("letterCount").value = "all";
+        document.getElementById("resultList").innerHTML = `
+            <div class="msg-box">
+                کلمه یا سوال جدول (مثل: پایتخت، اثر، شاعر، رود، مخترع، نام کهن و...) را وارد کنید.
+            </div>`;
+        document.getElementById("statusText").innerText = "آماده جستجو";
+        document.getElementById("txtInput").focus();
+    }
+
+    document.getElementById("txtInput").addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+            findCrossword();
+        }
+    });
+</script>
+
+</body>
+</html>
