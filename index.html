@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشیار - دانشنامه و راهنمای حل جدول</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 15px;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #1a568c;
+            margin-bottom: 5px;
+            font-size: 24px;
+        }
+        p.subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 13px;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .search-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            border-color: #1a568c;
+        }
+        button {
+            padding: 12px 20px;
+            background-color: #1a568c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #13426b;
+        }
+        .mode-selector {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 15px;
+            background: #eee;
+            padding: 5px;
+            border-radius: 8px;
+        }
+        .mode-selector label {
+            font-size: 13px;
+            cursor: pointer;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f9f9f9;
+            border-right: 4px solid #1a568c;
+            min-height: 50px;
+            line-height: 1.6;
+        }
+        .loading {
+            color: #888;
+            font-style: italic;
+        }
+        .error {
+            color: #d9534f;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>دانشیار</h1>
+    <p class="subtitle">دانشنامه جامع و راهنمای حل جدول متقاطع</p>
+
+    <div class="mode-selector">
+        <label><input type="radio" name="searchMode" value="all" checked> همه موارد</label>
+        <label><input type="radio" name="searchMode" value="table"> راهنمای جدول</label>
+        <label><input type="radio" name="searchMode" value="wiki"> دانشنامه (تاریخ/جغرافیا/...)</label>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="کلمه یا سوال جدول را وارد کنید...">
+        <button onclick="performSearch()">جستجو</button>
+    </div>
+
+    <div id="result">
+        پاسخ یا نتیجه جستجو در این قسمت نمایش داده می‌شود.
+    </div>
+</div>
+
+<script>
+    // بانک اطلاعاتی نمونه برای سوالات پرکاربرد جدول
+    const tableDatabase = {
+        "پایتخت فرانسه": "پاریس",
+        "کاشف پنی سیلین": "فلپمینگ",
+        "طولانی ترین رود جهان": "نیل",
+        "نویسنده شاهنامه": "فردوسی",
+        "واحد پول ژاپن": "ین",
+        "رود آلمان": "راین",
+        "پرنده افسانه‌ای": "سیمرغ",
+        "شاعر بوستان": "سعدی"
+    };
+
+    function performSearch() {
+        const query = document.getElementById('searchInput').value.trim();
+        const resultDiv = document.getElementById('result');
+        const mode = document.querySelector('input[name="searchMode"]:checked').value;
+
+        if (!query) {
+            resultDiv.innerHTML = '<span class="error">لطفاً واژه یا سوالی را برای جستجو وارد کنید.</span>';
+            return;
+        }
+
+        resultDiv.innerHTML = '<span class="loading">در حال جستجو و دریافت اطلاعات...</span>';
+
+        // ۱. ابتدا جستجو در بانک جدول
+        if (tableDatabase[query]) {
+            resultDiv.innerHTML = `<strong>پاسخ جدول:</strong> ${tableDatabase[query]}`;
+            return;
+        }
+
+        // ۲. جستجو در دانشنامه آنلاین (ویکی‌پدیای فارسی) برای اطلاعات عمومی، تاریخی، جغرافیایی و معنایی
+        const wikiUrl = `https://fa.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+
+        fetch(wikiUrl)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('یافت نشد');
+            })
+            .then(data => {
+                if (data.extract) {
+                    resultDiv.innerHTML = `
+                        <strong>${data.title}</strong><br>
+                        <p>${data.extract}</p>
+                        ${data.thumbnail ? `<img src="${data.thumbnail.source}" style="max-width:100%; border-radius:8px; margin-top:10px;">` : ''}
+                    `;
+                } else {
+                    resultDiv.innerHTML = 'موردی یافت نشد. لطفاً عبارت دیگری را امتحان کنید.';
+                }
+            })
+            .catch(error => {
+                resultDiv.innerHTML = `نتیجه مستقیمی یافت نشد. می‌توانید عبارت <b>"${query}"</b> را به‌صورت جزئی‌تر جستجو کنید.`;
+            });
+    }
+
+    // قابلیت اجرا با زدن دکمه Enter روی کیبورد گوشی
+    document.getElementById('searchInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            performSearch();
+        }
+    });
+</script>
+
+</body>
+</html>
