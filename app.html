@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشیار پیشرفته</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; padding: 15px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #result { margin-top: 20px; line-height: 1.6; }
+        .result-item { padding: 10px; border-bottom: 1px solid #eee; }
+        h3 { color: #007bff; margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>دانشیار (جستجوگر)</h1>
+    <input type="text" id="q" placeholder="مثلاً: جزایر ژاپن، پایتخت فرانسه...">
+    <button onclick="search()">جستجو</button>
+    <div id="result"></div>
+</div>
+
+<script>
+function search() {
+    const q = document.getElementById('q').value;
+    const resDiv = document.getElementById('result');
+    resDiv.innerHTML = "در حال جستجو...";
+
+    // استفاده از API جستجوی ویکی‌پدیا (بسیار قوی‌تر از قبل)
+    const url = `https://fa.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const results = data.query.search;
+            if (results.length === 0) {
+                resDiv.innerHTML = "موردی یافت نشد.";
+                return;
+            }
+
+            resDiv.innerHTML = "<h3>نتایج یافت شده:</h3>";
+            results.slice(0, 5).forEach(item => {
+                // پاک کردن تگ‌های HTML اضافی از متن ویکی‌پدیا
+                const snippet = item.snippet.replace(/<[^>]*>?/gm, ''); 
+                resDiv.innerHTML += `
+                    <div class="result-item">
+                        <strong>${item.title}</strong><br>
+                        ${snippet}...
+                    </div>
+                `;
+            });
+        })
+        .catch(() => {
+            resDiv.innerHTML = "خطا در اتصال. اینترنت خود را چک کنید.";
+        });
+}
+</script>
+
+</body>
+</html>
