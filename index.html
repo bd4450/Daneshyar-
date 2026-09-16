@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشیار - راهنمای جامع حل جدول</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: Tahoma, Arial, sans-serif; padding: 15px; background: #f0f2f5; margin: 0; }
+        .container { max-width: 600px; margin: 0 auto; }
+        h1 { text-align: center; color: #1a73e8; margin-bottom: 20px; font-size: 24px; }
+        
+        /* باکس جستجو و دکمه */
+        .search-box { display: flex; gap: 8px; margin-bottom: 20px; }
+        .search-input { 
+            flex: 1; 
+            padding: 12px 15px; 
+            font-size: 16px; 
+            border: 2px solid #1a73e8; 
+            border-radius: 8px; 
+            outline: none;
+        }
+        .search-btn { 
+            padding: 12px 20px; 
+            background: #1a73e8; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer;
+        }
+        .search-btn:active { background: #1557b0; }
+
+        /* نمایش نتایج */
+        .card { 
+            background: white; 
+            padding: 12px 15px; 
+            margin-bottom: 10px; 
+            border-radius: 8px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+            border-right: 4px solid #1a73e8;
+        }
+        .word { font-weight: bold; color: #2c3e50; font-size: 18px; }
+        .clue { color: #555; font-size: 15px; margin-top: 5px; }
+        .count { color: #888; text-align: center; margin-bottom: 15px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>دانشیار</h1>
+        
+        <!-- فرم جستجو همراه با دکمه -->
+        <div class="search-box">
+            <input type="text" id="searchInput" class="search-input" placeholder="جستجوی کلمه یا راهنمای جدول..." onkeyup="handleKeyUp(event)">
+            <button onclick="searchWords()" class="search-btn">جستجو</button>
+        </div>
+
+        <div id="resultCount" class="count"></div>
+        <div id="results"></div>
+    </div>
+
+    <!-- متصل به فایل کلمات -->
+    <script src="data.js"></script>
+    
+    <script>
+        function handleKeyUp(event) {
+            // اگر کاربر کلید Enter را زد
+            if (event.key === "Enter") {
+                searchWords();
+            } else {
+                // جستجوی لحظه‌ای همزمان با تایپ
+                searchWords();
+            }
+        }
+
+        function searchWords() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const resultsDiv = document.getElementById('results');
+            const countDiv = document.getElementById('resultCount');
+            
+            resultsDiv.innerHTML = "";
+            
+            if (query === "") {
+                countDiv.innerHTML = "";
+                return;
+            }
+
+            // جستجو در کلمات و راهنما
+            const filtered = wordsDatabase.filter(item => 
+                item.word.toLowerCase().includes(query) || 
+                item.clue.toLowerCase().includes(query)
+            );
+
+            countDiv.innerHTML = `تعداد نتایج: ${filtered.length}`;
+
+            if (filtered.length === 0) {
+                resultsDiv.innerHTML = '<div class="card" style="text-align:center;">کلمه‌ای یافت نشد.</div>';
+                return;
+            }
+
+            filtered.forEach(item => {
+                resultsDiv.innerHTML += `
+                    <div class="card">
+                        <div class="word">${item.word}</div>
+                        <div class="clue">${item.clue}</div>
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
