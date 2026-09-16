@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشیار - دانشنامه و راهنمای جدول</title>
+    <style>
+        * { box-sizing: border-box; font-family: Tahoma, 'Segoe UI', sans-serif; }
+        body { background-color: #f3f4f6; margin: 0; padding: 12px; }
+        .container { max-width: 650px; margin: 0 auto; }
+        
+        .header { text-align: center; margin-bottom: 15px; }
+        .header h1 { margin: 5px 0; color: #1e3a8a; font-size: 22px; }
+        .header p { margin: 0; color: #6b7280; font-size: 13px; }
+
+        /* جعبه جستجو */
+        .search-container {
+            background: #ffffff;
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 15px;
+        }
+        .input-group { display: flex; gap: 6px; }
+        .search-input {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            outline: none;
+        }
+        .search-input:focus { border-color: #1d4ed8; }
+        .btn-search {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 0 18px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-search:active { background: #1e40af; }
+        .btn-clear {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* بخش نمایش نتایج */
+        .status-bar {
+            font-size: 13px;
+            color: #4b5563;
+            margin-bottom: 10px;
+            padding: 0 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .card {
+            background: white;
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            border-right: 5px solid #3b82f6;
+        }
+        .card-word {
+            font-size: 17px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        .card-clue {
+            font-size: 14px;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+        .card-category {
+            display: inline-block;
+            margin-top: 6px;
+            background: #e0e7ff;
+            color: #3730a3;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .empty-msg {
+            text-align: center;
+            padding: 30px 10px;
+            color: #9ca3af;
+            background: white;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>دانشیار</h1>
+        <p>دانشنامه جامع حل جدول و اطلاعات عمومی</p>
+    </div>
+
+    <!-- فرم جستجو -->
+    <div class="search-container">
+        <div class="input-group">
+            <input type="text" id="txtSearch" class="search-input" placeholder="کلمه، سوال جدول یا موضوع را بنویسید..." autofocus>
+            <button class="btn-search" id="btnSearch" onclick="runSearch()">جستجو</button>
+            <button class="btn-clear" onclick="clearInput()">پاک</button>
+        </div>
+    </div>
+
+    <!-- آمار و نتایج -->
+    <div class="status-bar" id="statusBar">
+        <span id="resultCount">آماده جستجو...</span>
+        <span id="totalDatabaseCount"></span>
+    </div>
+
+    <div id="resultsArea"></div>
+</div>
+
+<script>
+    // ==========================================
+    // پایگاه داده کلمات و سوالات جدول (مستقیم داخل فایل)
+    // ==========================================
+    const database = [
+        { word: "آنزیم", clue: "کاتالیزور زیستی در بدن", cat: "زیست‌شناسی" },
+        { word: "ابوعلی سینا", clue: "پزشک و فیلسوف نامدار ایرانی ملقب به شیخ الرئیس", cat: "مشاهیر" },
+        { word: "ارس", clue: "رود مرزی شمال غرب ایران", cat: "جغرافیا" },
+        { word: "ارگ بم", clue: "بزرگترین بنای خشت و گلی جهان در کرمان", cat: "آثار تاریخی" },
+        { word: "اسلو", clue: "پایتخت کشور نروژ", cat: "جغرافیا" },
+        { word: "افلاطون", clue: "فیلسوف یونانی شاگرد سقراط و استاد ارسطو", cat: "فلسفه" },
+        { word: "باکو", clue: "پایتخت جمهوری آذربایجان کنار دریای خزر", cat: "جغرافیا" },
+        { word: "بایرام", clue: "عید در زبان ترکی", cat: "زبان‌شناسی" },
+        { word: "پارس", clue: "نام کهن و اصیل ایران زمین", cat: "تاریخ" },
+        { word: "پالادیوم", clue: "عنصر فلزی گران‌بها با نماد Pd", cat: "شیمی" },
+        { word: "تخت جمشید", clue: "پایتخت تشریفاتی هخامنشیان معروف به پرسپولیس", cat: "تاریخ" },
+        { word: "توران", clue: "سرزمین باستانی در شاهنامه فردوسی", cat: "ادبیات" },
+        { word: "جامی", clue: "شاعر قرن نهم هجری و صاحب اثر هفت اورنگ", cat: "ادبیات" },
+        { word: "جیحون", clue: "نام دیگر رود آمودریا", cat: "جغرافیا" },
+        { word: "حافظ", clue: "لسان‌الغیب و شاعر بزرگ قرن هشتم در شیراز", cat: "ادبیات" },
+        { word: "خاقانی", clue: "شاعر معروف قرن ششم و صاحب قصیده ایوان مدائن", cat: "ادبیات" },
+        { word: "دماوند", clue: "بلندترین قله آتشفشانی ایران و خاورمیانه", cat: "جغرافیا" },
+        { word: "روبیدیوم", clue: "عنصر قلیایی با علامت اختصاری Rb", cat: "شیمی" },
+        { word: "زاگرس", clue: "رشته کوه طویل در غرب و جنوب غرب ایران", cat: "جغرافیا" },
+        { word: "زرتشت", clue: "پیامبر ایران باستان و آورنده کتاب اوستا", cat: "تاریخ و دین" },
+        { word: "سعدی", clue: "استاد سخن و نویسنده گلستان و بوستان", cat: "ادبیات" },
+        { word: "سهراب سپهری", clue: "شاعر معاصر شعر نو و نقاش اهل کاشان", cat: "ادبیات" },
+        { word: "شاهنامه", clue: "اثر حماسی ماندگار حکیم ابوالقاسم فردوسی", cat: "ادبیات" },
+        { word: "شمس تبریزی", clue: "مراد و پیر مولانا جلال‌الدین بلخی", cat: "عرفان" },
+        { word: "عطار نیشابوری", clue: "عارف نامدار و سراینده منطق‌الطیر", cat: "ادبیات" },
+        { word: "فردوسی", clue: "حکیم طوس و سراینده شاهنامه", cat: "ادبیات" },
+        { word: "کارون", clue: "پرآب‌ترین و طولانی‌ترین رودخانه ایران", cat: "جغرافیا" },
+        { word: "مولوی", clue: "عارف و شاعر بزرگ و خالق مثنوی معنوی", cat: "ادبیات" },
+        { word: "نیما یوشیج", clue: "پدر شعر نو فارسی با نام اصلی علی اسفندیاری", cat: "ادبیات" },
+        { word: "هلیوم", clue: "گاز نجیب سبک با نماد شیمیایی He", cat: "شیمی" }
+    ];
+
+    // تابع اصلاح حروف فارسی و عربی (یکسان‌سازی کامل)
+    function cleanPersian(text) {
+        if (!text) return "";
+        return text
+            .toString()
+            .replace(/[\u064B-\u065F]/g, "") // حذف اعراب (فتحه، ضمه، کسره، تنوین)
+            .replace(/ي/g, "ی")              // تبدیل ی عربی به فارسی
+            .replace(/ك/g, "ک")              // تبدیل ک عربی به فارسی
+            .replace(/ة/g, "ه")              // تبدیل ة به ه
+            .replace(/[\u200c\u200b]/g, " ") // تبدیل نیم‌فاصله به فاصله
+            .replace(/\s+/g, " ")            // حذف فاصله‌های اضافه
+            .trim()
+            .toLowerCase();
+    }
+
+    // اجرای جستجو
+    function runSearch() {
+        const input = document.getElementById("txtSearch");
+        const query = cleanPersian(input.value);
+        const resultsArea = document.getElementById("resultsArea");
+        const countSpan = document.getElementById("resultCount");
+
+        resultsArea.innerHTML = "";
+
+        if (query === "") {
+            countSpan.innerText = "لطفاً عبارتی را بنویسید";
+            resultsArea.innerHTML = '<div class="empty-msg">کلمه‌ای برای جستجو وارد نشده است.</div>';
+            return;
+        }
+
+        // جستجوی دوطرفه (هم در پاسخ و هم در سوال و دسته‌بندی)
+        const matches = database.filter(item => {
+            const wordClean = cleanPersian(item.word);
+            const clueClean = cleanPersian(item.clue);
+            const catClean = cleanPersian(item.cat || "");
+
+            return wordClean.includes(query) || clueClean.includes(query) || catClean.includes(query);
+        });
+
+        countSpan.innerText = `تعداد یافته‌ها: ${matches.length} مورد`;
+
+        if (matches.length === 0) {
+            resultsArea.innerHTML = `
+                <div class="empty-msg">
+                    نتیجه‌ای برای «<b>${input.value}</b>» پیدا نشد.<br>
+                    می‌توانید کلمه را خلاصه‌تر جستجو کنید.
+                </div>
+            `;
+            return;
+        }
+
+        // ساخت کارت‌های نتیجه
+        matches.forEach(item => {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = `
+                <div class="card-word">${item.word}</div>
+                <div class="card-clue">${item.clue}</div>
+                ${item.cat ? `<span class="card-category">${item.cat}</span>` : ""}
+            `;
+            resultsArea.appendChild(card);
+        });
+    }
+
+    // پاک کردن کادر
+    function clearInput() {
+        const input = document.getElementById("txtSearch");
+        input.value = "";
+        document.getElementById("resultsArea").innerHTML = "";
+        document.getElementById("resultCount").innerText = "کادر پاک شد";
+        input.focus();
+    }
+
+    // رویداد فشردن کلید اینتر در کیبورد گوشی
+    document.getElementById("txtSearch").addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+            runSearch();
+        }
+    });
+
+    // جستجوی همزمان با تایپ
+    document.getElementById("txtSearch").addEventListener("input", function () {
+        if (this.value.trim().length >= 2) {
+            runSearch();
+        }
+    });
+
+    // نمایش تعداد کل رکوردهای موجود در صفحه اول
+    window.onload = function() {
+        document.getElementById("totalDatabaseCount").innerText = `مجموع کل داده‌ها: ${database.length}`;
+    };
+</script>
+
+</body>
+</html>
