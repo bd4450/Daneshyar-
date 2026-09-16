@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشیار - نسخه پیشرفته حل جدول و دانشنامه</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #eef2f5;
+            margin: 0;
+            padding: 15px;
+            color: #333;
+        }
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #1a568c;
+            margin-bottom: 5px;
+            font-size: 24px;
+        }
+        p.subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 13px;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .search-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+        }
+        input[type="text"]:focus {
+            border-color: #1a568c;
+        }
+        button {
+            padding: 12px 20px;
+            background-color: #1a568c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f9f9f9;
+            border-right: 4px solid #1a568c;
+            min-height: 60px;
+            line-height: 1.8;
+        }
+        .tag {
+            display: inline-block;
+            background: #e1ecf4;
+            color: #2c5777;
+            padding: 4px 10px;
+            margin: 4px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        .loading { color: #888; }
+        .error { color: #d9534f; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>دانشیار (نسخه آزمایشی)</h1>
+    <p class="subtitle">حل‌کننده هوشمند جدول متقاطع و دانشنامه عمومی</p>
+
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="مثلاً: کشوری اروپایی، پایتخت آلمان، معنای کلمه...">
+        <button onclick="performSearch()">جستجو</button>
+    </div>
+
+    <div id="result">
+        سوال جدولی یا واژه دانشنامه‌ای خود را جستجو کنید.
+    </div>
+</div>
+
+<script>
+    // بانک اختصاصی سوالات و کلیدواژه‌های پرکاربرد جدول متقاطع
+    const tableCategories = {
+        "کشوری اروپایی": ["آلمان", "فرانسه", "ایتالیا", "اسپانیا", "اتریش", "بلژیک", "لهستان", "سوئد", "نروژ", "یونان", "هلند", "دانمارک", "فنلاند", "سوئیس"],
+        "کشور اروپایی": ["آلمان", "فرانسه", "ایتالیا", "اسپانیا", "اتریش", "بلژیک", "لهستان", "سوئد", "نروژ", "یونان", "هلند", "دانمارک", "فنلاند", "سوئیس"],
+        "کشوری آسیایی": ["ژاپن", "چین", "هند", "کره جنوبی", "ویتنام", "تایلند", "مالزی", "عمان", "قطر", "یمن", "عراق", "سوریه"],
+        "کشور آسیایی": ["ژاپن", "چین", "هند", "کره جنوبی", "ویتنام", "تایلند", "مالزی", "عمان", "قطر", "یمن", "عراق", "سوریه"],
+        "پایتخت آلمان": ["برلین"],
+        "پایتخت فرانسه": ["پاریس"],
+        "پایتخت ایتالیا": ["رم"],
+        "پایتخت اسپانیا": ["مادرید"],
+        "شاعر ایرانی": ["حافظ", "سعدی", "فردوسی", "مولوی", "خیام", "عطار", "نظامی", "سهراب سپهری", "پروین اعتصامی"],
+        "رود آلمان": ["راین", "البه", "دانوب"],
+        "رود اروپایی": ["دانوب", "راین", "ولگا", "تایمز", "سن"],
+        "واحد پول ژاپن": ["ین"],
+        "واحد پول اروپا": ["یورو"],
+        "کاشف پنی سیلین": ["فلپمینگ"]
+    };
+
+    function performSearch() {
+        const query = document.getElementById('searchInput').value.trim();
+        const resultDiv = document.getElementById('result');
+
+        if (!query) {
+            resultDiv.innerHTML = '<span class="error">لطفاً عبارتی را وارد کنید.</span>';
+            return;
+        }
+
+        resultDiv.innerHTML = '<span class="loading">در حال جستجو...</span>';
+
+        // ۱. جستجو در بانک دسته‌بندی جدول
+        let matchedCategory = null;
+        for (let key in tableCategories) {
+            if (query.includes(key) || key.includes(query)) {
+                matchedCategory = key;
+                break;
+            }
+        }
+
+        if (matchedCategory) {
+            const list = tableCategories[matchedCategory].map(item => `<span class="tag">${item}</span>`).join(' ');
+            resultDiv.innerHTML = `<strong>پاسخ‌های پیشنهادی برای "${matchedCategory}":</strong><br><br>${list}`;
+            return;
+        }
+
+        // ۲. جستجو در دانشنامه هوشمند آنلاین (ویکی‌پدیا)
+        const wikiUrl = `https://fa.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+
+        fetch(wikiUrl)
+            .then(response => {
+                if (response.ok) return response.json();
+                throw new Error('یافت نشد');
+            })
+            .then(data => {
+                if (data.extract) {
+                    resultDiv.innerHTML = `
+                        <strong>${data.title}</strong><br>
+                        <p>${data.extract}</p>
+                        ${data.thumbnail ? `<img src="${data.thumbnail.source}" style="max-width:100%; border-radius:8px; margin-top:10px;">` : ''}
+                    `;
+                } else {
+                    searchWikipediaSearchAPI(query);
+                }
+            })
+            .catch(() => {
+                searchWikipediaSearchAPI(query);
+            });
+    }
+
+    // جستجوی عبارت‌های عمومی و چندگزینه‌ای
+    function searchWikipediaSearchAPI(query) {
+        const searchUrl = `https://fa.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`;
+        const resultDiv = document.getElementById('result');
+
+        fetch(searchUrl)
+            .then(res => res.json())
+            .then(data => {
+                const results = data.query.search;
+                if (results && results.length > 0) {
+                    let html = `<strong>نتایج دانشنامه‌ای مرتبط با "${query}":</strong><br><ul>`;
+                    results.slice(0, 5).forEach(item => {
+                        html += `<li><b>${item.title}</b>: ${item.snippet} ...</li>`;
+                    });
+                    html += `</ul>`;
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.innerHTML = `موردی برای <b>"${query}"</b> یافت نشد. می‌توانید با حروف کمتر یا کلمه دیگری امتحان کنید.`;
+                }
+            })
+            .catch(() => {
+                resultDiv.innerHTML = 'خطا در برقراری ارتباط. لطفاً اتصال اینترنت خود را بررسی کنید.';
+            });
+    }
+
+    document.getElementById('searchInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') performSearch();
+    });
+</script>
+
+</body>
+</html>
