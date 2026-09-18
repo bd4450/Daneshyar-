@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>دانشیار</title>
+  <!-- فونت خوانای فارسی -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "B Mitra", "Mitra", "Vazirmatn", Tahoma, sans-serif;
+    }
+
+    body {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 580px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* عنوان اصلی برنامه */
+    .header-title {
+      text-align: center;
+      font-family: "B Titr", "Titr", "Vazirmatn", Tahoma, sans-serif;
+      font-size: 26px;
+      color: #1e3a8a;
+      margin-top: 4px;
+    }
+
+    /* تب‌های بالای صفحه */
+    .tabs {
+      display: flex;
+      background: #e2e8f0;
+      border-radius: 12px;
+      padding: 6px;
+      gap: 6px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px 6px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      font-family: "B Titr", "Titr", "Vazirmatn", Tahoma, sans-serif;
+      font-size: 16px;
+      color: #475569;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .tab-btn.active {
+      background: #ffffff;
+      color: #1e3a8a;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    /* کادر و دکمه جستجو */
+    .search-box {
+      display: flex;
+      gap: 8px;
+    }
+    .search-box input {
+      flex: 1;
+      padding: 14px 16px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 12px;
+      font-size: 16px;
+      outline: none;
+      background: #ffffff;
+      font-family: "B Mitra", "Mitra", "Vazirmatn", Tahoma, sans-serif;
+    }
+    .search-box input:focus {
+      border-color: #2563eb;
+    }
+    .search-btn {
+      padding: 14px 22px;
+      background: #2563eb;
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      font-family: "B Titr", "Titr", "Vazirmatn", Tahoma, sans-serif;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    /* لیست و کارت نتایج */
+    .results-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      border: 1px solid #e2e8f0;
+    }
+    .card h3 {
+      font-family: "B Titr", "Titr", "Vazirmatn", Tahoma, sans-serif;
+      font-size: 18px;
+      color: #1e3a8a;
+      margin-bottom: 10px;
+    }
+    .card p {
+      font-size: 16px;
+      line-height: 2;
+      color: #334155;
+      white-space: pre-line;
+    }
+    .card .answer-highlight {
+      font-family: "B Titr", "Titr", "Vazirmatn", Tahoma, sans-serif;
+      font-size: 18px;
+      color: #16a34a;
+    }
+
+    .empty-msg {
+      text-align: center;
+      color: #64748b;
+      padding: 24px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header-title">دانشیار</div>
+
+  <!-- تب‌ها -->
+  <div class="tabs">
+    <button class="tab-btn active" id="tabWiki" onclick="switchTab('wiki')">📚 دانشنامه جامع</button>
+    <button class="tab-btn" id="tabCrossword" onclick="switchTab('crossword')">🧩 حل جدول کلمات</button>
+  </div>
+
+  <!-- کادر جستجو -->
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="جستجو در دانشنامه..." onkeypress="handleEnter(event)">
+    <button class="search-btn" onclick="doSearch()">جستجو</button>
+  </div>
+
+  <!-- لیست پاسخ‌ها -->
+  <div class="results-list" id="results"></div>
+</div>
+
+<script>
+  // غیرفعال‌سازی و پاک‌سازی هرگونه سرویس‌ورکر قدیمی که کش را خراب می‌کرد
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+      for(let registration of registrations) {
+        registration.unregister();
+      }
+    });
+  }
+
+  let currentTab = 'wiki';
+
+  const encyclopediaData = [
+    {
+      title: "کوه‌های چین",
+      text: "مهم‌ترین رشته‌کوه‌ها و قله‌های کشور چین:\n۱. رشته‌کوه تیان‌شان (کوه‌های آسمانی در سین‌کیانگ و غرب چین)\n۲. رشته‌کوه کونلون (طویل‌ترین رشته‌کوه فلات تبت)\n۳. رشته‌کوه هیمالیا (قله اورست در مرز تبت و نپال)\n۴. رشته‌کوه پامیر در غرب چین\n۵. رشته‌کوه چینگ‌لینگ\n۶. کوه‌های مقدس تای‌شان و کوهستان آلتای."
+    },
+    {
+      title: "آثار ویکتور هوگو",
+      text: "معروف‌ترین شاهکارهای ویکتور هوگو:\n• بینوایان (Les Misérables)\n• گوژپشت نتردام (The Hunchback of Notre-Dame)\n• مردی که می‌خندد (The Man Who Laughs)\n• کارگران دریا\n• آخرین روز یک محکوم به اعدام\n• دیوان شرقیات (شعر)"
+    }
+  ];
+
+  const crosswordData = [
+    { clue: "پایتخت فرانسه", answer: "پاریس" },
+    { clue: "کاشف پنی‌سیلین", answer: "فلمینگ" },
+    { clue: "طولانی‌ترین رود جهان", answer: "نیل" },
+    { clue: "نویسنده شاهنامه", answer: "فردوسی" },
+    { clue: "واحد پول ژاپن", answer: "ین" },
+    { clue: "رود آلمان", answer: "راین" },
+    { clue: "پرنده افسانه‌ای", answer: "سیمرغ" },
+    { clue: "شاعر بوستان", answer: "سعدی" },
+    { clue: "دیوار قلعه", answer: "بارو" },
+    { clue: "چین و شکن", answer: "چروک" }
+  ];
+
+  function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('tabWiki').classList.toggle('active', tab === 'wiki');
+    document.getElementById('tabCrossword').classList.toggle('active', tab === 'crossword');
+    
+    const input = document.getElementById('searchInput');
+    input.placeholder = tab === 'wiki' ? "جستجو در دانشنامه (مثلاً کوه‌های چین)..." : "جستجوی سوال جدول (مثلاً دیوار قلعه)...";
+    doSearch();
+  }
+
+  function handleEnter(e) {
+    if (e.key === 'Enter') doSearch();
+  }
+
+  function doSearch() {
+    const q = document.getElementById('searchInput').value.trim();
+    const resultsBox = document.getElementById('results');
+
+    if (currentTab === 'wiki') {
+      const items = q ? encyclopediaData.filter(d => d.title.includes(q) || d.text.includes(q)) : encyclopediaData;
+      if (items.length === 0) {
+        resultsBox.innerHTML = '<div class="empty-msg">موردی در دانشنامه یافت نشد.</div>';
+        return;
+      }
+      resultsBox.innerHTML = items.map(d => `
+        <div class="card">
+          <h3>${d.title}</h3>
+          <p>${d.text}</p>
+        </div>
+      `).join('');
+    } else {
+      const items = q ? crosswordData.filter(d => d.clue.includes(q) || d.answer.includes(q)) : crosswordData;
+      if (items.length === 0) {
+        resultsBox.innerHTML = '<div class="empty-msg">سوالی با این عنوان در جدول یافت نشد.</div>';
+        return;
+      }
+      resultsBox.innerHTML = items.map(d => `
+        <div class="card">
+          <h3>${d.clue}</h3>
+          <p>پاسخ: <span class="answer-highlight">${d.answer}</span></p>
+        </div>
+      `).join('');
+    }
+  }
+
+  // نمایش اولیه اطلاعات به صورت خودکار
+  doSearch();
+</script>
+
+</body>
+</html>
