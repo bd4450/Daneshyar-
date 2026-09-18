@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشیار - دانشنامه جامع</title>
+    <style>
+        :root {
+            --primary: #0f2b48;
+            --accent: #1e6091;
+            --highlight: #184e77;
+            --bg: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #22252a;
+            --text-muted: #5a6578;
+            --border: #e2e8f0;
+            --tag-bg: #e0f2fe;
+            --tag-text: #0369a1;
+        }
+
+        body {
+            font-family: Tahoma, 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 15px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header-box {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #ffffff;
+            padding: 24px;
+            border-radius: 14px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(15, 43, 72, 0.15);
+            margin-bottom: 20px;
+        }
+
+        .header-box h1 {
+            margin: 0 0 8px 0;
+            font-size: 1.5rem;
+        }
+
+        .header-box p {
+            margin: 0;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .search-section {
+            background: var(--card-bg);
+            padding: 18px;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 16px;
+            font-size: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent);
+        }
+
+        .btn-search {
+            padding: 12px 24px;
+            background-color: var(--accent);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-search:hover {
+            background-color: var(--highlight);
+        }
+
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .cat-btn {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .cat-btn.active {
+            background: var(--accent);
+            color: #ffffff;
+            border-color: var(--accent);
+        }
+
+        .results-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .entry-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+            transition: transform 0.15s ease-in-out;
+        }
+
+        .entry-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 10px;
+        }
+
+        .entry-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .entry-en {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            font-weight: normal;
+        }
+
+        .category-badge {
+            background: var(--tag-bg);
+            color: var(--tag-text);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.78rem;
+            font-weight: bold;
+        }
+
+        .entry-content {
+            font-size: 0.95rem;
+            line-height: 1.75;
+            color: #334155;
+            text-align: justify;
+        }
+
+        .entry-keywords {
+            margin-top: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .keyword-tag {
+            background: #f8fafc;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+        }
+
+        .source-tag {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #0284c7;
+            text-decoration: none;
+        }
+
+        .msg-box {
+            text-align: center;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,0.1);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 0.8s ease-in-out infinite;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-box">
+        <h1>دانشنامه جامع دانشیار</h1>
+        <p>مرجع دانستنی‌ها، مشاهیر، جغرافیا، تاریخ، علوم و اطلاعات عمومی</p>
+    </div>
+
+    <div class="search-section">
+        <div class="search-bar">
+            <input type="text" id="wikiSearchInput" placeholder="جستجوی موضوع دانشنامه‌ای (مثل: فردوسی، خلیج فارس، اورست، نیتروژن، سعدی)..." onkeyup="handleKey(event)">
+            <button class="btn-search" onclick="searchWiki()">جستجو</button>
+        </div>
+
+        <div class="categories">
+            <button class="cat-btn active" onclick="filterCategory('all', this)">همه موضوعات</button>
+            <button class="cat-btn" onclick="filterCategory('تاریخ و جغرافیا', this)">تاریخ و جغرافیا</button>
+            <button class="cat-btn" onclick="filterCategory('ادبیات و مشاهیر', this)">ادبیات و مشاهیر</button>
+            <button class="cat-btn" onclick="filterCategory('علم و طبیعت', this)">علم و طبیعت</button>
+            <button class="cat-btn" onclick="filterCategory('اطلاعات عمومی', this)">اطلاعات عمومی</button>
+        </div>
+    </div>
+
+    <div id="wikiResults" class="results-container"></div>
+</div>
+
+<script>
+// پایگاه دانشنامه‌ای آفلاین
+const offlineEntries = [
+    {
+        title_fa: "تخت جمشید",
+        title_en: "Persepolis",
+        category: "تاریخ و جغرافیا",
+        content: "مجموعه‌ای از کاخ‌های بسیار با شکوه که ساخت آنها در سال ۵۱۲ پیش از میلاد توسط داریوش بزرگ آغاز شد و اتمام آن حدود ۱۵۰ سال به طول انجامید. پایتخت تشریفاتی پادشاهی هخامنشیان بوده و در مرودشت استان فارس قرار دارد.",
+        keywords: ["هخامنشیان", "شیراز", "داریوش", "کوروش", "ایران باستان", "ستون"]
+    },
+    {
+        title_fa: "فردوسی",
+        title_en: "Ferdowsi",
+        category: "ادبیات و مشاهیر",
+        content: "ابوالقاسم فردوسی طوسی (زاده ۳۲۹ ه‍.ق در طوس - درگذشته ۴۱۱ یا ۴۱۶ ه‍.ق)، بزرگ‌ترین حماسه‌سرای ایران و سراینده شاهنامه است که زبان فارسی را زنده نگه داشت.",
+        keywords: ["شاهنامه", "طوس", "رستم", "حماسه", "ادبیات فارسی", "شاعر"]
+    },
+    {
+        title_fa: "خلیج فارس",
+        title_en: "Persian Gulf",
+        category: "تاریخ و جغرافیا",
+        content: "آبراهی بین‌المللی و استراتژیک در جنوب غربی آسیا که مرز جنوبی ایران را تشکیل می‌دهد و از شرق از طریق تنگه هرمز و دریای عمان به اقیانوس هند راه دارد.",
+        keywords: ["ایران", "تنگه هرمز", "دریای عمان", "نفت", "خلیج"]
+    },
+    {
+        title_fa: "نیتروژن",
+        title_en: "Nitrogen",
+        category: "علم و طبیعت",
+        content: "عنصر شیمیایی با نشانه N و عدد اتمی ۷. گازی بی‌رنگ، بی‌بو و بی‌مزه است که حدود ۷۸ درصد از جو زمین را تشکیل می‌دهد و برای ساخت پروتئین‌ها در تمام جانداران حیاتی است.",
+        keywords: ["عنصر", "ازت", "شیمی", "گاز", "جو زمین"]
+    },
+    {
+        title_fa: "اورست",
+        title_en: "Mount Everest",
+        category: "تاریخ و جغرافیا",
+        content: "بلندترین کوه روی کره زمین با ارتفاع ۸٬۸۴۸ متر از سطح دریا که در رشته‌کوه‌های هیمالیا در مرز نپال و چین (تبت) واقع شده است.",
+        keywords: ["کوه", "هیمالیا", "قله", "بام جهان", "نپال"]
+    },
+    {
+        title_fa: "ابوعلی سینا",
+        title_en: "Avicenna",
+        category: "ادبیات و مشاهیر",
+        content: "پزشک، فیلسوف، ریاضی‌دان و دانشمند پرآوازه ایرانی در عصر طلایی اسلام. از مهم‌ترین آثار او کتاب «القانون فی الطب» در پزشکی و «شفا» در فلسفه است.",
+        keywords: ["پورسینا", "پزشکی", "قانون", "همدان", "فیلسوف"]
+    },
+    {
+        title_fa: "آمازون",
+        title_en: "Amazon River",
+        category: "تاریخ و جغرافیا",
+        content: "پرآب‌ترین رودخانه جهان که در آمریکای جنوبی جریان دارد و به اقیانوس اطلس می‌ریزد. جنگل‌های بارانی حوزه آمازون بزرگ‌ترین زیست‌بوم جنگلی جهان به‌شمار می‌روند.",
+        keywords: ["رود", "جنگل آمازون", "برزیل", "رودخانه", "پرآب ترین"]
+    },
+    {
+        title_fa: "الماس",
+        title_en: "Diamond",
+        category: "علم و طبیعت",
+        content: "یکی از آلوتروپ‌های کربن و سخت‌ترین ماده طبیعی شناخته‌شده روی زمین که به دلیل سختی بالا و درخشش فوق‌العاده در صنعت و جواهرسازی کاربرد فراوان دارد.",
+        keywords: ["کربن", "سنگ قیمتی", "کانی", "جواهر", "سخت ترین ماده"]
+    },
+    {
+        title_fa: "یانگ‌تسه",
+        title_en: "Yangtze River",
+        category: "تاریخ و جغرافیا",
+        content: "طولانی‌ترین رود قاره آسیا و سومین رود طولانی در جهان پس از نیل و آمازون، واقع در کشور چین.",
+        keywords: ["چین", "رودخانه", "آسیا"]
+    },
+    {
+        title_fa: "بوف کور",
+        title_en: "The Blind Owl",
+        category: "ادبیات و مشاهیر",
+        content: "مشهورترین اثر صادق هدایت، نویسنده برجسته معاصر ایرانی، که از شاهکارهای ادبیات داستانی مدرن و سوررئالیستی فارسی به شمار می‌رود.",
+        keywords: ["صادق هدایت", "رمان", "داستان", "ادبیات معاصر"]
+    }
+];
+
+let currentCategory = "all";
+
+function normalize(str) {
+    if (!str) return "";
+    return str.toString()
+        .replace(/[يى]/g, "ی")
+        .replace(/[ك]/g, "ک")
+        .replace(/[\u064B-\u065F]/g, "")
+        .replace(/\u200C/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function handleKey(e) {
+    if (e.key === 'Enter') searchWiki();
+}
+
+function filterCategory(cat, btn) {
+    currentCategory = cat;
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    searchWiki();
+}
+
+function renderCard(item, isOnline = false) {
+    return `
+        <div class="entry-card">
+            <div class="entry-header">
+                <div class="entry-title">
+                    ${item.title_fa}
+                    ${item.title_en ? `<span class="entry-en">(${item.title_en})</span>` : ''}
+                </div>
+                <span class="category-badge">${item.category || (isOnline ? 'دانشنامه برخط' : 'دانشنامه')}</span>
+            </div>
+            <div class="entry-content">${item.content}</div>
+            ${item.keywords && item.keywords.length ? `
+                <div class="entry-keywords">
+                    ${item.keywords.map(k => `<span class="keyword-tag">#${k}</span>`).join('')}
+                </div>
+            ` : ''}
+            ${isOnline ? `<a href="https://fa.wikipedia.org/wiki/${encodeURIComponent(item.title_fa)}" target="_blank" class="source-tag">مشاهده مقاله کامل در دانشنامه ↗</a>` : ''}
+        </div>
+    `;
+}
+
+async function fetchFromOnlineWiki(query) {
+    try {
+        const url = `https://fa.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (data && data.extract) {
+            return {
+                title_fa: data.title,
+                title_en: "",
+                category: "دانشنامه عمومی",
+                content: data.extract,
+                keywords: ["برخط", "ویکی"]
+            };
+        }
+    } catch (err) {
+        console.log("خطا در ارتباط برخط:", err);
+    }
+    return null;
+}
+
+async function searchWiki() {
+    const rawQuery = document.getElementById('wikiSearchInput').value;
+    const query = normalize(rawQuery);
+    const container = document.getElementById('wikiResults');
+    container.innerHTML = "";
+
+    // ۱. جستجو در پایگاه داخلی
+    let localMatches = offlineEntries.filter(item => {
+        if (currentCategory !== 'all' && item.category !== currentCategory) return false;
+        if (!query) return true;
+
+        const normTitle = normalize(item.title_fa);
+        const normContent = normalize(item.content);
+        const normEn = normalize(item.title_en);
+        const matchKeywords = item.keywords.some(k => normalize(k).includes(query));
+
+        return normTitle.includes(query) || normContent.includes(query) || normEn.includes(query) || matchKeywords;
+    });
+
+    if (localMatches.length > 0) {
+        localMatches.forEach(item => {
+            container.innerHTML += renderCard(item, false);
+        });
+        return;
+    }
+
+    // ۲. اگر عبارتی جستجو شده بود و در پایگاه داخلی نبود، جستجوی آنلاین زنده
+    if (query) {
+        container.innerHTML = `<div class="msg-box"><span class="loading-spinner"></span> در حال جستجو در شبکه دانشنامه‌ای...</div>`;
+        const onlineResult = await fetchFromOnlineWiki(query);
+
+        if (onlineResult) {
+            container.innerHTML = renderCard(onlineResult, true);
+        } else {
+            container.innerHTML = `
+                <div class="msg-box">
+                    <h3>مقاله‌ای با این عنوان یافت نشد</h3>
+                    <p>عبارت «<strong>${rawQuery}</strong>» در بانک اطلاعاتی یافت نشد. می‌توانید با کلمات دیگر امتحان کنید.</p>
+                </div>
+            `;
+        }
+    } else {
+        container.innerHTML = `<div class="msg-box">برای مشاهده مطالب، یک موضوع را جستجو یا دسته‌بندی را انتخاب نمایید.</div>`;
+    }
+}
+
+// نمایش اولیه
+window.onload = function() {
+    searchWiki();
+};
+</script>
+
+</body>
+</html>
