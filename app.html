@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشیار</title>
+    <style>
+        body { font-family: Tahoma, Arial, sans-serif; text-align: center; padding: 20px; }
+        input { width: 80%; padding: 10px; font-size: 16px; margin-bottom: 20px; }
+        #result { margin-top: 20px; text-align: right; border-top: 1px solid #ccc; padding-top: 10px; }
+        .item { margin-bottom: 15px; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+    <h2>دانشیار: جستجوی هوشمند</h2>
+    <input type="text" id="searchInput" placeholder="نام یا کلمه کلیدی را وارد کنید...">
+    <div id="result"></div>
+
+    <!-- اتصال به دیتابیس دقیق ما -->
+    <script src="data1.js"></script>
+
+    <script>
+        const input = document.getElementById('searchInput');
+        const resultDiv = document.getElementById('result');
+
+        input.addEventListener('input', function() {
+            const query = this.value.trim().toLowerCase();
+            resultDiv.innerHTML = ''; // پاک کردن نتایج قبلی
+
+            if (query.length < 2) return;
+
+            // جستجو فقط در فایل data1.js (متغیر daneshyarData)
+            const filtered = daneshyarData.filter(item => 
+                item.title.toLowerCase().includes(query) || 
+                item.aliases.some(a => a.toLowerCase().includes(query)) ||
+                item.crossword_clues.some(c => c.toLowerCase().includes(query))
+            );
+
+            if (filtered.length > 0) {
+                filtered.forEach(item => {
+                    resultDiv.innerHTML += `
+                        <div class="item">
+                            <strong>${item.title}</strong> (${item.category})<br>
+                            <small>${item.summary}</small>
+                        </div>
+                    `;
+                });
+            } else {
+                resultDiv.innerHTML = 'موردی یافت نشد.';
+            }
+        });
+    </script>
+</body>
+</html>
