@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشیار - دانشنامه جامع و حل جدول</title>
+    <style>
+        :root {
+            --primary: #0f2b48;
+            --accent: #1e6091;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --tag-bg: #e0f2fe;
+            --tag-text: #0369a1;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: Tahoma, 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 12px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* تب‌های ناوبری */
+        .main-tabs {
+            display: flex;
+            background: #e2e8f0;
+            padding: 4px;
+            border-radius: 12px;
+            margin-bottom: 14px;
+            gap: 4px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 9px;
+            cursor: pointer;
+            background: transparent;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: #ffffff;
+            color: var(--primary);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* جستجو */
+        .search-box {
+            background: var(--card-bg);
+            padding: 14px;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            margin-bottom: 14px;
+            border: 1px solid var(--border);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 14px;
+            font-size: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent);
+        }
+
+        .btn-search {
+            padding: 12px 20px;
+            background-color: var(--accent);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* فیلترها */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            color: #ffffff;
+            border-color: var(--accent);
+        }
+
+        /* کارت‌ها و نتایج */
+        .results-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-right: 5px solid var(--accent);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 6px;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .badge {
+            background: var(--tag-bg);
+            color: var(--tag-text);
+            padding: 3px 8px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .card-body {
+            font-size: 0.95rem;
+            line-height: 1.8;
+            color: #334155;
+            text-align: justify;
+        }
+
+        .msg-box {
+            text-align: center;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- تب انتخاب بخش -->
+    <div class="main-tabs">
+        <button class="tab-btn active" onclick="switchTab('wiki', this)">📚 دانشنامه جامع</button>
+        <button class="tab-btn" onclick="switchTab('table', this)">🧩 حل جدول کلمات</button>
+    </div>
+
+    <!-- بخش دانشنامه -->
+    <div id="wikiTab" class="tab-content active">
+        <div class="search-box">
+            <div class="input-group">
+                <input type="text" id="wikiInput" placeholder="جستجو (کوههای چین، آثار ویکتور هوگو، داستایفسکی، پایتخت‌ها)..." onkeyup="if(event.key==='Enter') searchWiki()">
+                <button class="btn-search" onclick="searchWiki()">جستجو</button>
+            </div>
+            <div class="filters">
+                <button class="filter-btn active" onclick="filterWiki('all', this)">همه موضوعات</button>
+                <button class="filter-btn" onclick="filterWiki('جغرافیا', this)">جغرافیا و کوه‌ها</button>
+                <button class="filter-btn" onclick="filterWiki('ادبیات', this)">ادبیات و مفاخر</button>
+                <button class="filter-btn" onclick="filterWiki('علوم', this)">علوم و کاشفان</button>
+            </div>
+        </div>
+        <div id="wikiResults" class="results-list"></div>
+    </div>
+
+    <!-- بخش جدول کلمات -->
+    <div id="tableTab" class="tab-content">
+        <div class="search-box">
+            <div class="input-group">
+                <input type="text" id="tableInput" placeholder="پرسش جدول (دیوار قلعه، اسب راهوار، چین و شکن، سرخ شده)..." onkeyup="if(event.key==='Enter') searchTable()">
+                <button class="btn-search" onclick="searchTable()">جستجو</button>
+            </div>
+            <div class="filters">
+                <button class="filter-btn active" onclick="filterTable(0, this)">همه طول‌ها</button>
+                <button class="filter-btn" onclick="filterTable(2, this)">۲ حرف</button>
+                <button class="filter-btn" onclick="filterTable(3, this)">۳ حرف</button>
+                <button class="filter-btn" onclick="filterTable(4, this)">۴ حرف</button>
+                <button class="filter-btn" onclick="filterTable(5, this)">۵ حرف</button>
+                <button class="filter-btn" onclick="filterTable(6, this)">۶+ حرف</button>
+            </div>
+        </div>
+        <div id="tableResults" class="results-list"></div>
+    </div>
+</div>
+
+<script>
+// ۱. پایگاه آفلاین دانشنامه
+const wikiDB = [
+    {
+        title: "کوه‌های چین (رشته‌کوه‌ها و قله‌های مهم)",
+        category: "جغرافیا",
+        content: "مهم‌ترین رشته‌کوه‌ها و قله‌های کشور چین: ۱. رشته‌کوه تیان شان (کوه‌های آسمانی در سین‌کیانگ و غرب چین)، ۲. رشته‌کوه کونلون (طویل‌ترین رشته‌کوه فلات تبت)، ۳. رشته‌کوه هیمالیا (قله اورست در مرز تبت و نپال)، ۴. رشته‌کوه پامیر در غرب، ۵. رشته‌کوه چینگ‌لینگ، ۶. کوه‌های مقدس تای‌شان و کوهستان آلتای.",
+        keywords: ["کوه چین", "کوههای چین", "رشته کوه چین", "قله های چین", "تیان شان", "کونلون", "تبت"]
+    },
+    {
+        title: "آثار ویکتور هوگو",
+        category: "ادبیات",
+        content: "ویکتور هوگو (۱۸۰۲–۱۸۸۵) رمان‌نویس و شاعر برجسته فرانسوی. مهم‌ترین رمان‌ها و آثار وی: ۱. بینوایان (شاهکار بزرگ پیرامون ژان والژان و کوزت)، ۲. گوژپشت نتردام، ۳. مردی که می‌خندد، ۴. کارگران دریا، ۵. آخرین روز یک محکوم به اعدام، ۶. کلود ولگرد، ۷. نود و سه، ۸. دیوان شرقیات.",
+        keywords: ["ویکتور هوگو", "هوگو", "اثار هوگو", "بینوایان", "گوژپشت نتردام", "مردی که میخندد", "کتابهای هوگو"]
+    },
+    {
+        title: "آثار فئودور داستایفسکی",
+        category: "ادبیات",
+        content: "رمان‌نویس شهیر روس. مهم‌ترین شاهکارها: جنایت و مکافات (با شخصیت راسکولنیکف)، برادران کارامازوف، ابله (پرنس میشکین)، جن‌زدگان، قمارباز، یادداشت‌های زیرزمینی و شب‌های روشن.",
+        keywords: ["داستایوفسکی", "داستایفسکی", "جنایت و مکافات", "برادران کارامازوف", "ابله", "قمارباز"]
+    },
+    {
+        title: "آثار لئو تولستوی",
+        category: "ادبیات",
+        content: "بزرگ‌ترین رمان‌نویس تاریخ ادبیات روسیه. آثار جاودان: جنگ و صلح (شاهکار توصیف نبرد ناپلئون با روسیه)، آنا کارنینا، رستاخیز، مرگ ایوان ایلیچ، حاجی مراد و سونات کرویتزر.",
+        keywords: ["تولستوی", "جنگ و صلح", "آنا کارنینا", "مرگ ایوان ایلیچ"]
+    },
+    {
+        title: "آثار ویلیام شکسپیر",
+        category: "ادبیات",
+        content: "بزرگ‌ترین نمایشنامه‌نویس جهان. آثار برجسته: هملت، مکبث، رومئو و ژولیت، شاه لیر، اتللو، تاجر ونیزی، رویای شب نیمه تابستان، رام کردن زن سرکش.",
+        keywords: ["شکسپیر", "هملت", "مکبث", "شاه لیر", "اتللو"]
+    },
+    {
+        title: "پایتخت‌های مهم جهان",
+        category: "جغرافیا",
+        content: "پایتخت‌های پرتکرار: چین (پکن)، استرالیا (کانبرا)، برزیل (برازیلیا)، کانادا (اتاوا)، ترکیه (آنکارا)، آمریکا (واشنگتن)، ژاپن (توکیو)، سوئیس (برن)، آلمان (برلین)، فرانسه (پاریس)، روسیه (مسکو).",
+        keywords: ["پایتخت", "پایتخت ها", "کانبرا", "اتاوا", "برازیلیا", "پکن"]
+    },
+    {
+        title: "رودهای بزرگ جهان",
+        category: "جغرافیا",
+        content: "۱. نیل در آفریقا (طولانی‌ترین رود جهان)، ۲. آمازون در آمریکای جنوبی (پرآب‌ترین رود جهان)، ۳. یانگ‌تسه در چین (طولانی‌ترین رود آسیا)، ۴. میسی‌سیپی، ۵. دانوب و راین در اروپا.",
+        keywords: ["رودها", "یانگ تسه", "رودهای چین", "نیل", "آمازون", "دانوب"]
+    },
+    {
+        title: "مخترعان و کاشفان نامدار",
+        category: "علوم",
+        content: "ادیسون (لامپ و گرامافون)، گراهام بل (تلفن)، لویی پاستور (واکسن هاری و پاستوریزاسیون)، ماری کوری (رادیوم و پولونیوم)، الکساندر فلمینگ (پنی‌سیلین)، جیمز وات (موتور بخار).",
+        keywords: ["مخترع", "کاشف", "ادیسون", "گراهام بل", "پاستور", "ماری کوری", "پنی سیلین"]
+    }
+];
+
+// ۲. پایگاه حل جدول
+const tableDB = [
+    { word: "باره", clue: "دیوار قلعه، حصار، اسب، برج و بارو" },
+    { word: "بارو", clue: "دیوار قلعه، دیوار دفاعی گرد شهر یا دژ" },
+    { word: "حصار", clue: "دیوار قلعه، نرده و دیواره محافظ دور باغ و قصر" },
+    { word: "دژ", clue: "قلعه محکم، سنگر و بارو" },
+    { word: "تاب", clue: "چین و شکن زلف، پیچ، نیرو و توان" },
+    { word: "شکن", clue: "چین و شکن، پیچ و خم مو" },
+    { word: "فر", clue: "چین و شکن زلف، شکوه، جلال و هیبت" },
+    { word: "رهوار", clue: "اسب راهوار، اسب تندرو و خوش‌گام" },
+    { word: "سمند", clue: "اسب راهوار زرد یا طلایی‌رنگ" },
+    { word: "یبه", clue: "اسب راهوار و بارکش" },
+    { word: "برشته", clue: "سرخ شده در روغن یا آتش، تفت داده شده" },
+    { word: "تفتیده", clue: "سرخ شده، بسیار داغ و سوزان" },
+    { word: "یرا", clue: "دلیری، دلاوری، توانایی و شجاعت" },
+    { word: "تاک", clue: "درخت انگور، مو، رز" },
+    { word: "کاکو", clue: "برادر در گویش شیرازی" },
+    { word: "برار", clue: "برادر در گویش خراسانی و لری" }
+];
+
+let activeWikiCat = "all";
+let activeTableLen = 0;
+
+function switchTab(tab, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (tab === 'wiki') {
+        document.getElementById('wikiTab').classList.add('active');
+        document.getElementById('tableTab').classList.remove('active');
+    } else {
+        document.getElementById('tableTab').classList.add('active');
+        document.getElementById('wikiTab').classList.remove('active');
+    }
+}
+
+function normalizeFa(str) {
+    if (!str) return "";
+    return str.toString()
+        .replace(/[يى]/g, "ی")
+        .replace(/[ك]/g, "ک")
+        .replace(/[\u064B-\u065F\u0670]/g, "")
+        .replace(/\u200C/g, " ")
+        .replace(/کوههای/g, "کوه های")
+        .replace(/آثار/g, "اثار")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+// فیلتر و جستجوی دانشنامه
+function filterWiki(cat, btn) {
+    activeWikiCat = cat;
+    document.querySelectorAll('#wikiTab .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    searchWiki();
+}
+
+async function searchWiki() {
+    const raw = document.getElementById('wikiInput').value.trim();
+    const container = document.getElementById('wikiResults');
+    container.innerHTML = "";
+
+    if (!raw) {
+        showDefaultWiki();
+        return;
+    }
+
+    const norm = normalizeFa(raw);
+    const tokens = norm.split(" ").filter(t => t.length > 1 && !["های","ها","ی","در","از","به"].includes(t));
+
+    // جستجوی دیتابیس داخلی
+    let matches = wikiDB.filter(item => {
+        if (activeWikiCat !== 'all' && item.category !== activeWikiCat) return false;
+        const full = normalizeFa(item.title + " " + item.content + " " + (item.keywords || []).join(" "));
+        if (full.includes(norm)) return true;
+        if (tokens.length > 0 && tokens.every(t => full.includes(t))) return true;
+        return false;
+    });
+
+    if (matches.length > 0) {
+        matches.forEach(item => {
+            container.innerHTML += `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">${item.title}</span>
+                        <span class="badge">${item.category}</span>
+                    </div>
+                    <div class="card-body">${item.content}</div>
+                </div>
+            `;
+        });
+        return;
+    }
+
+    // جستجوی آنلاین زنده
+    container.innerHTML = `<div class="msg-box">در حال واکشی از دانشنامه برخط...</div>`;
+    try {
+        const res = await fetch(`https://fa.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(raw)}&format=json&origin=*&utf8=1`);
+        const data = await res.json();
+        if (data.query && data.query.search && data.query.search.length > 0) {
+            container.innerHTML = "";
+            data.query.search.slice(0, 3).forEach(art => {
+                const text = art.snippet.replace(/<\/?[^>]+(>|$)/g, "");
+                container.innerHTML += `
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">${art.title}</span>
+                            <span class="badge">دانشنامه</span>
+                        </div>
+                        <div class="card-body">${text}...</div>
+                    </div>
+                `;
+            });
+            return;
+        }
+    } catch (e) {}
+
+    container.innerHTML = `<div class="msg-box">موردی برای «<strong>${raw}</strong>» یافت نشد.</div>`;
+}
+
+function showDefaultWiki() {
+    const container = document.getElementById('wikiResults');
+    container.innerHTML = "";
+    wikiDB.forEach(item => {
+        if (activeWikiCat !== 'all' && item.category !== activeWikiCat) return;
+        container.innerHTML += `
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">${item.title}</span>
+                    <span class="badge">${item.category}</span>
+                </div>
+                <div class="card-body">${item.content}</div>
+            </div>
+        `;
+    });
+}
+
+// فیلتر و جستجوی جدول
+function filterTable(len, btn) {
+    activeTableLen = len;
+    document.querySelectorAll('#tableTab .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    searchTable();
+}
+
+function searchTable() {
+    const raw = document.getElementById('tableInput').value.trim();
+    const container = document.getElementById('tableResults');
+    container.innerHTML = "";
+    if (!raw) return;
+
+    const norm = normalizeFa(raw);
+    const tokens = norm.split(" ").filter(t => t.length > 1);
+
+    const matches = tableDB.filter(item => {
+        if (activeTableLen > 0) {
+            if (activeTableLen === 6 && item.word.length < 6) return false;
+            if (activeTableLen < 6 && item.word.length !== activeTableLen) return false;
+        }
+        const w = normalizeFa(item.word);
+        const c = normalizeFa(item.clue);
+        if (w === norm || c.includes(norm)) return true;
+        if (tokens.length > 0 && tokens.every(t => c.includes(t) || w.includes(t))) return true;
+        return false;
+    });
+
+    if (matches.length === 0) {
+        container.innerHTML = `<div class="msg-box">پاسخی برای «<strong>${raw}</strong>» یافت نشد.</div>`;
+        return;
+    }
+
+    matches.forEach(item => {
+        container.innerHTML += `
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">${item.word}</span>
+                    <span class="badge">${item.word.length} حرفی</span>
+                </div>
+                <div class="card-body"><strong>پاسخ جدول:</strong> ${item.clue}</div>
+            </div>
+        `;
+    });
+}
+
+window.onload = function() {
+    showDefaultWiki();
+};
+</script>
+
+</body>
+</html>
