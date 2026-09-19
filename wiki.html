@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشنامه wiki</title>
+    <style>
+        body { font-family: sans-serif; padding: 15px; background-color: #f9f9f9; color: #333; margin: 0; }
+        .container { max-width: 600px; margin: auto; }
+        input { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; margin-bottom: 10px; }
+        button { width: 100%; padding: 15px; background-color: #007bff; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        button:active { background-color: #0056b3; }
+        #result { background: white; padding: 15px; border-radius: 8px; margin-top: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); min-height: 50px; }
+        h3 { margin-top: 0; color: #0056b3; }
+        .loading { text-align: center; color: #666; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <input type="text" id="searchInput" placeholder="جستجو در دانشنامه..." onkeypress="if(event.key === 'Enter') searchWiki()">
+    <button onclick="searchWiki()">جستجو</button>
+    <div id="result">پاسخ‌ها در اینجا نمایش داده می‌شود...</div>
+</div>
+
+<script>
+    async function searchWiki() {
+        const query = document.getElementById('searchInput').value.trim();
+        const resultDiv = document.getElementById('result');
+        
+        if (!query) return;
+
+        resultDiv.innerHTML = '<div class="loading">در حال جستجو...</div>';
+
+        // فراخوانی API ویکی‌پدیا
+        const url = `https://fa.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=true&explaintext=true&titles=${encodeURIComponent(query)}&origin=*`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            const pages = data.query.pages;
+            const pageId = Object.keys(pages)[0];
+
+            if (pageId === "-1") {
+                resultDiv.innerHTML = "نتیجه‌ای یافت نشد.";
+            } else {
+                const title = pages[pageId].title;
+                const extract = pages[pageId].extract;
+                
+                // نمایش عنوان و متن بدون حاشیه
+                resultDiv.innerHTML = `<h3>${title}</h3><p>${extract || "توضیحی برای این مورد یافت نشد."}</p>`;
+            }
+        } catch (error) {
+            resultDiv.innerHTML = "خطا در اتصال. لطفا اینترنت خود را بررسی کنید.";
+        }
+    }
+</script>
+
+</body>
+</html>
