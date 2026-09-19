@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشیار</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Tahoma, sans-serif; background-color: #f4f4f9; padding: 15px; }
+        .container { max-width: 600px; margin: auto; }
+        .search-box { display: flex; gap: 8px; margin-bottom: 15px; }
+        input[type="text"] { flex: 1; padding: 14px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; }
+        input[type="text"]:focus { border-color: #2c3e50; }
+        button { padding: 14px 24px; background: #2c3e50; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        button:active { background: #1a252f; }
+        #result { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.08); line-height: 1.8; color: #333; font-size: 15px; min-height: 50px; }
+        #result h3 { color: #2c3e50; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; font-size: 18px; }
+        .item-row { padding: 8px 0; border-bottom: 1px dashed #eee; }
+        .item-row:last-child { border-bottom: none; }
+        .badge { font-weight: bold; color: #d35400; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="جستجو..." onkeypress="if(event.key === 'Enter') executeSearch()">
+        <button onclick="executeSearch()">جستجو</button>
+    </div>
+    <div id="result"></div>
+</div>
+
+<script>
+    // پایگاه داده داخلی کلمات و جدول
+    const tableDatabase = [
+        { word: "پایتخت آلمان", answer: "برلین" },
+        { word: "واحد پول ژاپن", answer: "ین" },
+        { word: "بزرگترین اقیانوس", answer: "آرام" },
+        { word: "سرزمین چکمه", answer: "ایتالیا" }
+    ];
+
+    async function executeSearch() {
+        const query = document.getElementById('searchInput').value.trim();
+        const resultDiv = document.getElementById('result');
+        if (!query) return;
+
+        // اولویت اول: جستجو در بانک کلمات و جدول
+        const localResults = tableDatabase.filter(item => 
+            item.word.includes(query) || item.answer.includes(query)
+        );
+
+        if (localResults.length > 0) {
+            let html = "";
+            localResults.forEach(item => {
+                html += `<div class="item-row"><span class="badge">${item.word}:</span> ${item.answer}</div>`;
+            });
+            resultDiv.innerHTML = html;
+            return;
+        }
+
+        // اولویت دوم: فراخوانی دانشنامه آنلاین (بدون حواشی)
+        const url = `https://fa.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=true&explaintext=true&titles=${encodeURIComponent(query)}&origin=*`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            const pages = data.query.pages;
+            const pageId = Object.keys(pages)[0];
+
+            if (pageId !== "-1" && pages[pageId].extract) {
+                resultDiv.innerHTML = `<h3>${pages[pageId].title}</h3><p>${pages[pageId].extract}</p>`;
+            } else {
+                resultDiv.innerHTML = "یافت نشد.";
+            }
+        } catch (error) {
+            resultDiv.innerHTML = "خطا در اتصال.";
+        }
+    }
+</script>
+
+</body>
+</html>
