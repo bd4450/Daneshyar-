@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشیار</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: Tahoma, sans-serif; background: #f4f4f9; padding: 12px; margin: 0; }
+        .container { max-width: 650px; margin: auto; }
+        
+        .header-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e293b;
+            margin: 10px 0 15px 0;
+        }
+
+        .search-box { display: flex; gap: 6px; margin-bottom: 12px; }
+        input { 
+            flex: 1; 
+            padding: 12px; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 8px; 
+            font-size: 15px; 
+            outline: none; 
+            background: #fff;
+        }
+        input:focus { border-color: #0284c7; }
+        button { 
+            padding: 12px 18px; 
+            background: #0284c7; 
+            color: #fff; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 15px; 
+            font-weight: bold;
+        }
+
+        #result { 
+            background: #fff; 
+            padding: 14px; 
+            border-radius: 8px; 
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08); 
+            min-height: 70px;
+        }
+        
+        .result-head {
+            font-size: 15px;
+            font-weight: bold;
+            color: #0f172a;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .meaning-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            margin-bottom: 8px; 
+            padding: 6px 8px;
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+        .meaning-item:last-child { margin-bottom: 0; }
+        .badge { 
+            background: #0284c7; 
+            color: #ffffff; 
+            font-size: 12px; 
+            font-weight: bold; 
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .text { 
+            flex: 1; 
+            color: #0f172a; 
+            font-size: 14px; 
+            font-weight: 500;
+        }
+
+        .status-msg {
+            color: #64748b;
+            font-size: 14px;
+            text-align: center;
+            padding: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-title">موتور جستجوی جدولی دانشیار</div>
+
+    <div class="search-box">
+        <input type="text" id="q" placeholder="پرسش جدول، کلمه، کنایه یا اصطلاح...">
+        <button onclick="startSearch()">جستجو</button>
+    </div>
+
+    <div id="result">
+        <div class="status-msg">پرسش یا کلمه مورد نظر را وارد کرده و جستجو کنید.</div>
+    </div>
+</div>
+
+<script>
+    function cleanInput(str) {
+        if (!str) return '';
+        return str
+            .replace(/ي/g, 'ی')
+            .replace(/ك/g, 'ک')
+            .replace(/[\u064B-\u065F\u0670]/g, '')
+            .replace(/[\u200C\u200B]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    // پالایش دقیق برای حذف متون بلند، هرزنامه‌ها و توضیحات دانشنامه‌ای اضافه
+    function filterWords(rawList) {
+        const blacklist = [
+            "ویکی", "مقاله", "ارجاع", "منبع", "صفحه", "ویرایش", "نگاه کنید به", 
+            "رده:", "اصطلاحات", "عبارت است از", "می باشد", "می‌باشد", "است که",
+            "ثبت شده", "تاریخچه", "سال", "میلادی", "شمسی", "بخش", "نامیده شد",
+            "شامل", "مترادف", "متضاد", "همچنین", "دارای", "عنوان"
+        ];
+
+        let cleanResults = [];
+
+        for (let item of rawList) {
+            let s = cleanInput(item);
+            
+            // حذف پرانتز، قلاب و نقل قول
+            s = s.replace(/\([^)]*\)/g, '').replace(/\[[^\]]*\]/g, '').replace(/«[^»]*»/g, '').trim();
+
+            // فیلتر: برای پاسخ جدول طول عبارت نباید خیلی بلند باشد (حداکثر ۴ کلمه و ۳۵ کاراکتر)
+            let wordCount = s.split(' ').length;
+            if (s.length >= 2 && s.length <= 35 && wordCount <= 4) {
+                let hasJunk = blacklist.some(junk => s.includes(junk));
+                if (!hasJunk && !cleanResults.includes(s)) {
+                    cleanResults.push(s);
+                }
+            }
+            if (cleanResults.length >= 10) break;
+        }
+
+        return cleanResults;
+    }
+
+    // بانک داده برای کلمات خاص، واحدهای قدیمی و سوالات پرتکرار جدول
+    const customKB = [
+        {
+            keys: ["واحدهای وزنی قدیم", "واحد وزن قدیم", "یکای وزن قدیم", "اوزان قدیم"],
+            answers: ["من", "سیر", "خروار", "درم", "مثقال", "قیراط", "حبه", "پیمانه", "چارک", "ری"]
+        },
+        {
+            keys: ["واحدهای طول قدیم", "واحد طول قدیم", "یکای طول قدیم"],
+            answers: ["فرسنگ", "ذرع", "گز", "ارسش", "وجب", "فرسخ", "فرسنگ"]
+        },
+        {
+            keys: ["پایتخت آلمان"],
+            answers: ["برلین"]
+        },
+        {
+            keys: ["واحد پول ژاپن"],
+            answers: ["ین"]
+        },
+        {
+            keys: ["بزرگترین اقیانوس"],
+            answers: ["آرام", "کبیر"]
+        },
+        {
+            keys: ["چشم و چراغ"],
+            answers: ["عزیز", "گرامی", "محبوب خانواده", "نور چشم"]
+        },
+        {
+            keys: ["شتر دیدی ندیدی"],
+            answers: ["رازپوشی", "کتمان", "پنهان‌کاری"]
+        },
+        {
+            keys: ["آب زیر کاه"],
+            answers: ["مکار", "حیله‌گر", "بدذات"]
+        }
+    ];
+
+    async function startSearch() {
+        const inputEl = document.getElementById('q');
+        const r = document.getElementById('result');
+        const query = cleanInput(inputEl.value);
+
+        if (!query) {
+            r.innerHTML = '<div class="status-msg">لطفاً عبارتی برای جستجو وارد کنید.</div>';
+            return;
+        }
+
+        r.innerHTML = '<div class="status-msg">در حال جستجو و استخراج پاسخ‌ها...</div>';
+
+        // ۱. بررسی پایگاه داده داخلی جدول
+        for (let item of customKB) {
+            if (item.keys.some(k => query.includes(k) || k.includes(query))) {
+                showResults(query, item.answers.slice(0, 10));
+                return;
+            }
+        }
+
+        let gatheredWords = [];
+
+        // ۲. جستجو در فرهنگ‌های لغت (واژه‌یاب)
+        try {
+            const vUrl = `https://api.vajehyab.com/v3/search?token=GAPGPTMASKTOKENdkd8sseel1jX0X&q=${encodeURIComponent(query)}`;
+            const vRes = await fetch(vUrl);
+            const vData = await vRes.json();
+
+            if (vData && vData.data && vData.data.results && vData.data.results.length > 0) {
+                vData.data.results.forEach(res => {
+                    let sourceText = (res.text || res.summary || '');
+                    let tokens = sourceText.split(/[\n،؛;.\-–—\t]+/);
+                    tokens.forEach(t => gatheredWords.push(t));
+                });
+            }
+        } catch (e) {
+            // در صورت خطا فرآیند متوقف نشده و دانشنامه بررسی می‌شود
+        }
+
+        let filtered = filterWords(gatheredWords);
+
+        // ۳. اگر در فرهنگ لغت پاسخ مناسب نیافت، به دانشنامه متصل شو
+        if (filtered.length === 0) {
+            try {
+                // جستجوی عنوان مناسب از طریق ویکی‌پدیا
+                const searchApi = `https://fa.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=3&namespace=0&format=json&origin=*`;
+                const searchRes = await fetch(searchApi);
+                const searchData = await searchRes.json();
+
+                let titlesToFetch = [];
+                if (searchData && searchData[1] && searchData[1].length > 0) {
+                    titlesToFetch = searchData[1];
+                } else {
+                    titlesToFetch = [query];
+                }
+
+                // استخراج متن خلاصه‌شده مقالات مربوطه
+                for (let title of
