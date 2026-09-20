@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>دانشیار</title>
+  <style>
+    * { box-sizing: border-box; font-family: Tahoma, sans-serif; }
+    body { background-color: #f4f6f9; margin: 0; padding: 12px; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 12px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+    
+    .search-row { display: flex; gap: 6px; margin-bottom: 8px; }
+    input[type="text"] { flex: 1; padding: 10px 12px; border: 1px solid #ccc; border-radius
+    .filter-btn { padding: 5px 12px; border: 1px solid #ddd; background: #f0[type="text"]:focus { border-color: #1e3c72; }
+    .search-btn { padding: 10px 18px; background: #1e3c72; color: #fff; border: none; border-radius: 6px; font-size: 15px; cursor: pointer; }
+    .search-btn:active { background: #14284d; }
+
+    .filters { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; }
+    .filter-btn { padding: 5px 12px; border: 1px solid #ddd; background: #f0f0f0; border-radius: 16px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+    .filter-btn.active { background: #1e3c72; color: #fff; border-color: #1e3c72; }
+
+    .results { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+    .item { background: #fafafa; border: 1px solid #e5e5e5; border-right: 4px solid #1e3c72; padding: 8px 10px; border-radius: 5px; }
+    .item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .item-word { font-weight: bold; font-size: 16px; color: #1e3c72; }
+    .badge { font-size: 11px; padding: 2px 6px; border-radius: 8px; background: #e0e7ff; color: #3730a3; }
+    .item-meaning { font-size: 13px; line-height: 1.5; color: #444; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="search-row">
+    <input type="text" id="searchInput" placeholder="جستجو..." onkeydown="handleEnter(event)">
+    <button class="search-btn" onclick="doSearch()">جستجو</button>
+  </div>
+
+  <div class="filters">
+    <button class="filter-btn active" onclick="setSource('all', this)">همه</button>
+    <button class="filter-btn" onclick="setSource('دهخدا', this)">دهخدا</button>
+    <button class="filter-btn" onclick="setSource('معین', this)">معین</button>
+    <button class="filter-btn" onclick="setSource('عمید', this)">عمید</button>
+    <button class="filter-btn" onclick="setSource('آبادیس', this)">آبادیس</button>
+  </div>
+
+  <div class="results" id="resultsContainer"></div>
+</div>
+
+<script>
+// بانک واژگان کامل - تجمیع فرهنگ‌ها
+const allWords = [
+  { w: "پایتخت", m: "مرکز حکومت و مقر اصلی دولت کشور", s: "معین" },
+  { w: "پایتخت", m: "دارالسلطنه، تختگاه، کرسی نشین، دارالخلافه", s: "دهخدا" },
+  { w: "پایتخت", m: "شهر مرکزی که نهادهای اداری و سیاسی در آن است", s: "آبادیس" },
+  { w: "پوست", m: "پوشش خارجی تن انسان و حیوان، جِلد", s: "عمید" },
+  { w: "پوست", m: "قشر، غشا، آنچه روی مغز یا گوشت را می‌پوشاند", s: "دهخدا" },
+  { w: "پست", m: "پایین، فرومایه؛ اداره ارسال مرسولات و نامه‌ها", s: "معین" },
+  { w: "پست", m: "خوار، زبون، دنی؛ دستگاه پیک و چاپار", s: "عمید" },
+  { w: "پرواز", m: "پریدن در هوا، اوج گرفتن، سیر پرنده و هواپیما", s: "معین" },
+  { w: "پرواز", m: "طیران، پریدن جانور پردار در هوا", s: "دهخدا" },
+  { w: "آزادی", m: "حریت، رهایی، نبود مانع و اسارت", s: "آبادیس" },
+  { w: "آزادی", m: "خلاصی، رستگاری، فراغت از بندگی و قید", s: "دهخدا" },
+  { w: "آزادی", m: "قدرت عمل و تصمیم‌گیری مستقل", s: "عمید" },
+  { w: "خورشید", m: "آفتاب، مهر، خور، ستاره پرنور منظومه شمسی", s: "دهخدا" },
+  { w: "خورشید", m: "چشمه نور و گرمابخش زمین", s: "معین" },
+  { w: "دریا", m: "پهنه‌ای پهناور از آب شور؛ بحر، یم", s: "عمید" },
+  { w: "دریا", m: "توده آب بزرگ محصور در خشکی‌ها؛ بحر", s: "آبادیس" },
+  { w: "ستاره", m: "کوکب، اختر، جرم آسمانی فروزان", s: "معین" },
+  { w: "ستاره", m: "اجرام نورانی شبانه؛ طالع و بخت", s: "دهخدا" },
+  { w: "کتاب", m: "نامه، نوشته، صحیفه، دفتر شعر یا علم", s: "دهخدا" },
+  { w: "کتاب", m: "مجموعه برگ‌های به هم پیوسته شامل متن و دانش", s: "آبادیس" },
+  { w: "باران", m: "قطرات آب حاصل از تراکم ابر که بر زمین می‌بارد", s: "عمید" },
+  { w: "باران", m: "مطر، غیث، رحمت الهی به صورت آب بارنده", s: "معین" },
+  { w: "دانشیار", m: "رتبه علمی در دانشگاه میان استادیار و استاد", s: "معین" },
+  { w: "دانشیار", m: "یار و یاور دانش؛ پژوهنده دانایی", s: "دهخدا" }
+];
+
+let currentSource = 'all';
+
+function setSource(source, btn) {
+  currentSource = source;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  doSearch();
+}
+
+function handleEnter(e) {
+  if (e.key === 'Enter') {
+    doSearch();
+  }
+}
+
+function doSearch() {
+  const query = document.getElementById('searchInput').value.trim();
+  const container = document.getElementById('resultsContainer');
+  
+  if (!query) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const isCrossword = query.includes('_');
+  let matched = [];
+
+  if (isCrossword) {
+    const regexPattern = new RegExp('^' + query.replace(/_/g, '.') + '$');
+    matched = allWords.filter(item => {
+      const matchSource = (currentSource === 'all' || item.s === currentSource);
+      return matchSource && item.w.length === query.length && regexPattern.test(item.w);
+    });
+  } else {
+    matched = allWords.filter(item => {
+      const matchSource = (currentSource === 'all' || item.s === currentSource);
+      return matchSource && item.w.includes(query);
+    });
+  }
+
+  const finalResults = matched.slice(0, 40);
+
+  if (finalResults.length === 0) {
+    container.innerHTML = '<div style="text-align:center; color:#888; padding:15px;">نتیجه‌ای یافت نشد.</div>';
+    return;
+  }
+
+  container.innerHTML = finalResults.map(item => `
+    <div class="item">
+      <div class="item-header">
+        <span class="item-word">${item.w}</span>
+        <span class="badge">${item.s}</span>
+      </div>
+      <div class="item-meaning">${item.m}</div>
+    </div>
+  `).join('');
+}
+</script>
+
+</body>
+</html>
