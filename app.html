@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشیار</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: Tahoma, sans-serif; background: #f1f5f9; padding: 12px; margin: 0; }
+        .container { max-width: 650px; margin: auto; background: #ffffff; padding: 16px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        
+        .header-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 14px;
+        }
+
+        /* دکمه‌های تب */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: #e2e8f0;
+            color: #334155;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .tab-btn.active {
+            background: #0284c7;
+            color: #ffffff;
+        }
+
+        /* کادر جستجو */
+        .search-box { display: flex; gap: 6px; margin-bottom: 14px; }
+        input { 
+            flex: 1; 
+            padding: 12px; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 8px; 
+            font-size: 15px; 
+            outline: none; 
+            background: #fff;
+        }
+        input:focus { border-color: #0284c7; }
+        .btn-search { 
+            padding: 12px 20px; 
+            background: #0284c7; 
+            color: #fff; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 15px; 
+            font-weight: bold;
+        }
+
+        #result { 
+            background: #f8fafc; 
+            padding: 12px; 
+            border-radius: 8px; 
+            border: 1px solid #e2e8f0;
+            min-height: 80px;
+        }
+        
+        .result-head {
+            font-size: 15px;
+            font-weight: bold;
+            color: #0f172a;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #cbd5e1;
+        }
+
+        .meaning-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            margin-bottom: 8px; 
+            padding: 8px 10px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+        }
+        .meaning-item:last-child { margin-bottom: 0; }
+        .badge { 
+            background: #0284c7; 
+            color: #ffffff; 
+            font-size: 12px; 
+            font-weight: bold; 
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .text { 
+            flex: 1; 
+            color: #0f172a; 
+            font-size: 14px; 
+            line-height: 1.6;
+        }
+
+        .status-msg {
+            color: #64748b;
+            font-size: 14px;
+            text-align: center;
+            padding: 16px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-title">دانشیار (راهنمای حل جدول و واژگان)</div>
+
+    <!-- تب‌ها -->
+    <div class="tabs">
+        <button id="tab-vajeh" class="tab-btn active" onclick="switchTab('vajeh')">فرهنگ لغت و اصطلاحات</button>
+        <button id="tab-wiki" class="tab-btn" onclick="switchTab('wiki')">دانشنامه عمومی</button>
+    </div>
+
+    <!-- بخش جستجو -->
+    <div class="search-box">
+        <input type="text" id="q" placeholder="کلمه، اصطلاح یا سوال مورد نظر...">
+        <button class="btn-search" onclick="startSearch()">جستجو</button>
+    </div>
+
+    <div id="result">
+        <div class="status-msg">عبارت مورد نظر را بنویسید و جستجو را بزنید.</div>
+    </div>
+</div>
+
+<script>
+    let currentTab = 'vajeh'; // مقدار پیش‌فرض: فرهنگ لغت
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.getElementById('tab-vajeh').classList.toggle('active', tab === 'vajeh');
+        document.getElementById('tab-wiki').classList.toggle('active', tab === 'wiki');
+        
+        const input = document.getElementById('q');
+        if (tab === 'vajeh') {
+            input.placeholder = "کلمه، کنایه، مترادف یا اصطلاح...";
+        } else {
+            input.placeholder = "شخصیت، کشور، رویداد، علم و دانش...";
+        }
+    }
+
+    function cleanInput(str) {
+        if (!str) return '';
+        return str
+            .replace(/ي/g, 'ی')
+            .replace(/ك/g, 'ک')
+            .replace(/[\u064B-\u065F\u0670]/g, '')
+            .replace(/[\u200C\u200B]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    // پالایش خروجی برای جدول (حذف پاراگراف‌های طولانی و هرزنامه‌ها)
+    function filterWords(rawList) {
+        const blacklist = [
+            "ویکی", "مقاله", "ارجاع", "منبع", "ویرایش", "نگاه کنید به", 
+            "رده:", "اصطلاحات", "عبارت است از", "می باشد", "می‌باشد", "است که",
+            "ثبت شده", "تاریخچه", "میلادی", "شمسی", "نامیده شد", "همچنین"
+        ];
+
+        let cleanResults = [];
+        for (let item of rawList) {
+            let s = cleanInput(item);
+            s = s.replace(/\([^)]*\)/g, '').replace(/\[[^\]]*\]/g, '').replace(/«[^»]*»/g, '').trim();
+
+            let wordCount = s.split(' ').length;
+            if (s.length >= 2 && s.length <= 40 && wordCount <= 5) {
+                let hasJunk = blacklist.some(junk => s.includes(junk));
+                if (!hasJunk && !cleanResults.includes(s)) {
+                    cleanResults.push(s);
+                }
+            }
+            if (cleanResults.length >= 10) break;
+        }
+        return cleanResults;
+    }
+
+    // پایگاه محلی برای سوالات جدولی رایج
+    const customKB = [
+        {
+            keys: ["واحدهای وزنی قدیم", "واحد وزن قدیم", "یکای وزن قدیم", "اوزان قدیم"],
+            answers: ["من", "سیر", "خروار", "درم", "مثقال", "قیراط", "حبه", "پیمانه", "چارک"]
+        },
+        {
+            keys: ["واحدهای طول قدیم", "واحد طول قدیم", "یکای طول قدیم"],
+            answers: ["فرسنگ", "ذرع", "گز", "ارسش", "وجب", "فرسخ"]
+        },
+        {
+            keys: ["پایتخت آلمان"],
+            answers: ["برلین"]
+        },
+        {
+            keys: ["واحد پول ژاپن"],
+            answers: ["ین"]
+        },
+        {
+            keys: ["بزرگترین اقیانوس"],
+            answers: ["آرام", "کبیر"]
+        },
+        {
+            keys: ["چشم و چراغ"],
+            answers: ["عزیز", "گرامی", "محبوب خانواده", "نور چشم"]
+        },
+        {
+            keys: ["شتر دیدی ندیدی"],
+            answers: ["رازپوشی", "کتمان", "پنهان‌کاری"]
+        },
+        {
+            keys: ["آب زیر کاه"],
+            answers: ["مکار", "حیله‌گر", "بدذات"]
+        }
+    ];
+
+    async function searchWikipedia(query) {
+        let words = [];
+        try {
+            const searchApi = `https://fa.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=3&namespace=0&format=json&origin=*`;
+            const searchRes = await fetch(searchApi);
+            const searchData = await searchRes.json();
+
+            let titles = (searchData && searchData[1] && searchData[1].length > 0) ? searchData[1] : [query];
+
+            for (let title of titles) {
+                const wikiUrl = `https://fa.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=true&explaintext=true&titles=${encodeURIComponent(title)}&format=json&origin=*`;
+                const wRes = await fetch(wikiUrl);
+                const wData = await wRes.json();
+                const pages = wData.query.pages;
+                const pageId = Object.keys(pages)[0];
+
+                if (pageId !== "-1" && pages[pageId].extract) {
+                    let text = pages[pageId].extract;
+                    let tokens = text.split(/[\n،؛;.\-–—:()\[\]]+/);
+                    tokens.forEach(t => words.push(t));
+                }
+            }
+        } catch (e) {}
+        return filterWords(words);
+    }
+
+    async function searchDictionary(query) {
+        let words = [];
+        try {
+            const vUrl = `https://api.vajehyab.com/v3/search?token=GAPGPTMASKTOKENe2w88ajsg1nX0X&q=${encodeURIComponent(query)}`;
+            const vRes = await fetch(vUrl);
+            const vData = await vRes.json();
+
+            if (vData && vData.data && vData.data.results) {
+                vData.data.results.forEach(res => {
+                    let sourceText = (res.text || res.summary || '');
+                    let tokens = sourceText.split(/[\n،؛;.\-–—\t]+/);
+                    tokens.forEach(t => words.push(t));
+                });
+            }
+        } catch (e) {}
+        return filterWords(words);
+    }
+
+    async function startSearch() {
+        const inputEl = document.getElementById('q');
+        const r = document.getElementById('result');
+        const query = cleanInput(inputEl.value);
+
+        if (!query) {
+            r.innerHTML = '<div class="status-msg">لطفاً عبارتی برای جستجو بنویسید.</div>';
+            return;
+        }
+
+        r.innerHTML = '<div class="status-msg">در حال جستجو و استخراج پاسخ‌ها...</div>';
+
+        // ۱. اول پایگاه داده داخلی چک می‌شود
+        for (let item of customKB) {
+            if (item.keys.some(k => query.includes(k) || k.includes(query))) {
+                showResults(query, item.answers.slice(0, 10));
+                return;
+            }
+        }
+
+        let results = [];
+
+        // ۲. جستجو بر اساس تب فعال
+        if (currentTab === 'vajeh') {
+            results = await searchDictionary(query);
+            // اگر در لغت‌نامه پیدا نشد، به عنوان کمکی در دانشنامه جستجو کن
+            if (results.length === 0) {
+                results = await searchWikipedia(query);
+            }
+        } else {
+            results = await searchWikipedia(query);
+            if (results.length === 0) {
+                results = await searchDictionary(query);
+            }
+        }
+
+        // ۳. نمایش نتیجه نهایی
+        if (results.length > 0) {
+            showResults(query, results);
+        } else {
+            r.innerHTML = '<div class="status-msg">موردی برای «' + query + '» پیدا نشد. عبارت دیگر یا املای دیگری را امتحان کنید.</div>';
+        }
+    }
+
+    function showResults(title, items) {
+        const r = document.getElementById('result');
+        let html = `<div class="result-head">نتایج برای: ${title}</div>`;
+
+        items.forEach((word, index) => {
+            html += `
+                <div class="meaning-item">
+                    <span class="badge">${index + 1}</span>
+                    <span class="text">${word}</span>
+                </div>
+            `;
+        });
+
+        r.innerHTML = html;
+    }
+
+    // امکان جستجو با کلید Enter
+    document.getElementById('q').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            startSearch();
+        }
+    });
+</script>
+
+</body>
+</html>
