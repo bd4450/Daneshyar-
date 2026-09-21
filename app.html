@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>دانشیار</title>
+  <style>
+    body{font-family:tahoma,sans-serif;background:#f1f5f9;margin:0;padding:12px}
+    .box{max-width:780px;margin:auto;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px}
+    h1{margin:0 0 10px;font-size:1.2rem}
+    .row{display:flex;gap:8px}
+    input{flex:1;padding:12px;border:1.5px solid #cbd5e1;border-radius:10px;font-size:1rem;outline:none}
+    button{padding:12px 18px;border:0;border-radius:10px;background:#16a34a;color:#fff;font-weight:700}
+    #meta{margin:10px 0;color:#64748b;font-size:.9rem}
+    .item{padding:10px 0;border-bottom:1px solid #f1f5f9}
+    .w{font-weight:800}
+    .src{color:#64748b;font-size:.85rem;margin-right:6px}
+    .m{margin-top:6px;white-space:pre-wrap}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>دانشیار</h1>
+
+    <div class="row">
+      <input id="q" placeholder="واژه یا الگوی جدول (مثلاً س.ل.م)" autocomplete="off" />
+      <button id="btn" type="button">جستجو</button>
+    </div>
+
+    <div id="meta">در حال آماده‌سازی...</div>
+    <div id="res"></div>
+  </div>
+
+  <!-- فقط همین یک فایل دیتابیس -->
+  <script src="dic.js"></script>
+
+  <script>
+    const $ = (id)=>document.getElementById(id);
+    const meta = $("meta");
+    const res = $("res");
+    const qEl = $("q");
+
+    function norm(s){
+      return (s||"")
+        .toString()
+        .replace(/ي/g,"ی").replace(/ك/g,"ک")
+        .replace(/\u200c/g,"")
+        .trim();
+    }
+
+    function patternToRegex(pat){
+      // پشتیبانی از: . و ؟ و _ به معنی یک حرف
+      // و همچنین حالت جدول مثل س.ل.م
+      const p = norm(pat);
+      const esc = p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const rx = esc
+        .replace(/\\\./g, ".")     // نقطه‌ی کاربر = هر کاراکتر
+        .replace(/\\\?/g, ".")     // ؟ = هر کاراکتر
+        .replace(/_/g, ".");       // _ = هر کاراکتر
+      return new RegExp("^" + rx + "$");
+    }
+
+    function ready(){
+      if(!window.DIC || !Array.isArray(window.DIC)){
+        meta.textContent = "خطا: فایل dic.js لود نشده یا ساختار DIC درست نیست.";
+        meta.style.color = "#dc2626";
+        return;
+      }
+      meta.textContent = `آماده — تعداد کل مدخل‌ها: ${window.DIC.length.toLocaleString("fa-IR")}`;
+      meta.style.color = "#16a34a";
+    }
+
+    function render(items){
+      if(!items.length){
+        res.innerHTML = "<div class='item'>نتیجه‌ای پیدا نشد.</div>";
+        return;
+      }
+      res.innerHTML = items.map(i => `
+        <div class="item">
+          <div><span class="w">${i.w||""}</span><span class="src">(${i.src||""})</span></div>
+          <div class="m">${i.m||""}</div>
+        </div>
+      `).join("");
+    }
+
+    function search(){
+      const q = norm(qEl.value);
+      if(!q){ render([]); return; }
+
+      const isPattern = /[._؟?]/.test(q);
+      let out = [];
+
+      if(isPattern){
+        const rx = patternToRegex(q.replace(/\s+/g,""));
+        for(const it of window.DIC){
+          const w = norm(it.w);
+          if(rx.test(w)) out.push(it);
+          if(out.length>=200) break;
+        }
+      }else{
+        // اول: شروع با واژه
+        for(const it of window.DIC){
+          const w = norm(it.w);
+          if(w.startsWith(q)) out.push(it);
+          if(out.length>=120) break;
+        }
+        // بعد: شامل واژه (اگر کم بود)
+        if(out.length<40){
+          for(const it of window.DIC){
+            const w = norm(it.w);
+            if(!w.startsWith(q) && w.includes(q)) out.push(it);
+            if(out.length>=200) break;
+          }
+        }
+      }
+
+      render(out);
+    }
+
+    window.addEventListener("load", ready);
+    $("btn").addEventListener("click", search);
+    qEl.addEventListener("keydown", (e)=>{ if(e.key==="Enter") search(); });
+  </script>
+</body>
+</html>
