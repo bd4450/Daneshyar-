@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشیار - جستجوی هوشمند کلمات و جدول</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: Tahoma, sans-serif; background: #f1f5f9; padding: 10px; margin: 0; }
+        .container { max-width: 650px; margin: auto; background: #ffffff; padding: 16px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        h1 { font-size: 1.35rem; text-align: center; color: #0f172a; margin: 8px 0; }
+        #status { font-size: 0.8rem; color: #64748b; text-align: center; margin-bottom: 12px; background: #f8fafc; padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        
+        .search-area { display: flex; gap: 8px; margin-bottom: 8px; }
+        input { flex: 1; padding: 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 1rem; outline: none; transition: border-color 0.2s; }
+        input:focus { border-color: #dc2626; }
+        
+        /* دکمه قرمز اختصاصی دانشیار */
+        button { 
+            padding: 12px 20px; 
+            background: #dc2626; 
+            color: #ffffff; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 1rem; 
+            font-weight: bold; 
+            box-shadow: 0 2px 4px rgba(220, 38, 38, 0.25);
+            white-space: nowrap;
+        }
+        button:active { background: #b91c1c; }
+
+        .hint { font-size: 0.75rem; color: #64748b; margin-bottom: 12px; line-height: 1.6; }
+        .count-info { font-size: 0.8rem; color: #475569; margin-bottom: 10px; font-weight: bold; }
+        
+        .result-item { padding: 12px; border-bottom: 1px solid #f1f5f9; line-height: 1.8; }
+        .result-item:last-child { border-bottom: none; }
+        .exact-match { background: #fef2f2; border-radius: 8px; border: 1px solid #fecaca; margin-bottom: 8px; }
+        .pattern-match { background: #eff6ff; border-radius: 8px; border: 1px solid #bfdbfe; margin-bottom: 8px; }
+        
+        .word { font-weight: bold; color: #991b1b; font-size: 1.15rem; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; }
+        .meaning { color: #334155; font-size: 0.95rem; text-align: justify; }
+        .source { color: #94a3b8; font-size: 0.75rem; margin-top: 6px; }
+        
+        .tag { display: inline-block; font-size: 0.7rem; padding: 2px 8px; border-radius: 6px; font-weight: normal; }
+        .tag-exact { background: #fee2e2; color: #991b1b; }
+        .tag-pattern { background: #dbeafe; color: #1e40af; }
+        .tag-meaning { background: #f1f5f9; color: #475569; }
+        
+        .not-found { text-align: center; color: #94a3b8; padding: 30px 10px; font-size: 0.95rem; line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>دانشیار</h1>
+    <div id="status">در حال بارگذاری لغت‌نامه‌ها...</div>
+    
+    <div class="search-area">
+        <input type="text" id="query" placeholder="کلمه یا الگوی جدول (مثلاً: پ..ان یا من)">
+        <button onclick="search()">جستجو</button>
+    </div>
+    <div class="hint">💡 برای حل جدول، به جای حروف خالی از نقطه (<code>.</code>) یا <code>؟</code> استفاده کنید.</div>
+    
+    <div id="results"></div>
+</div>
+
+<!-- فایل‌های دیتابیس -->
+<script src="dehkhoda.js"></script>
+<script src="amid.js"></script>
+<script src="moein.js"></script>
+<script src="abadis.js"></script>
+
+<script>
+    let allData = [];
+
+    // نرمال‌سازی دقیق و استاندارد فارسی
+    function cleanText(str) {
+        if (!str) return "";
+        return String(str)
+            .replace(/[\u064B-\u065F\u0670]/g, '') // حذف اعراب و تشدید
+            .replace(/[يى]/g, "ی")
+            .replace(/ك/g, "ک")
+            .replace(/ة/g, "ه")
+            .replace(/[آأإا]/g, "ا")
+            .replace(/ؤ/g, "و")
+            .replace(/ئ/g, "ی")
+            .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, ' ') // پاکسازی نیم‌فاصله‌های معیوب
+            .replace(/\s+/g, ' ')
+            .trim()
+            .toLowerCase();
+    }
+
+    function processArray(arr, sourceName) {
+        if (!Array.isArray(arr)) return;
+        for (let i = 0; i < arr.length; i++) {
+            const item = arr[i];
+            if (!item) continue;
+            const word = item.word || item.w || item.title || item.name || "";
+            const meaning = item.def || item.meaning || item.m || item.desc || "";
+            
+            const wTrim = String(word).trim();
+            const mTrim = String(meaning).trim();
+
+            if (wTrim) {
+                allData.push({
+                    w: wTrim,
+                    m: mTrim,
+                    src: sourceName,
+                    cleanW: cleanText(wTrim),
+                    cleanM: cleanText(mTrim)
+                });
+            }
+        }
+    }
+
+    // شناسایی خودکار متغیرهای دیتابیس لود شده
+    function detectGlobalData() {
+        const checkList = [
+            { names: ['dehkhoda', 'DEHKHODA', 'dehkhodaData'], label: 'دهخدا' },
+            { names: ['amid', 'AMID', 'amidData'], label: 'عمید' },
+            { names: ['moein', 'MOEIN', 'moeinData'], label: 'معین' },
+            { names: ['abadis', 'ABADIS', 'abadisData'], label: 'آبادیس' }
+        ];
+
+        checkList.forEach(item => {
+            for (let name of item.names) {
+                if (window[name] && Array.isArray(window[name])) {
+                    processArray(window[name], item.label);
+                    break;
+                }
+            }
+        });
+    }
+
+    async function loadFallbackFetch(fileName, sourceName) {
+        try {
+            const response = await fetch(fileName);
+            if (!response.ok) return false;
+            let text = await response.text();
+            const eqIndex = text.indexOf('=');
+            if (eqIndex !== -1 && eqIndex < 60) {
+                text = text.substring(eqIndex + 1).trim();
+            }
+            if (text.endsWith(';')) text = text.slice(0, -1).trim();
+            const data = JSON.parse(text);
+            processArray(data, sourceName);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    window.onload = async function() {
+        const statusEl = document.getElementById('status');
+        
+        // ابتدا متغیرهای لود شده از script را بررسی می‌کنیم
+        detectGlobalData();
+
+        // اگر چیزی یافت نشد از طریق fetch امتحان می‌کنیم
+        if (allData.length === 0) {
+            await Promise.all([
+                loadFallbackFetch('dehkhoda.js', 'دهخدا'),
+                loadFallbackFetch('amid.js', 'عمید'),
+                loadFallbackFetch('moein.js', 'معین'),
+                loadFallbackFetch('abadis.js', 'آبادیس')
+            ]);
+        }
+
+        if (allData.length > 0) {
+            statusEl.innerText = `دیتابیس آماده است: ${allData.length.toLocaleString('fa-IR')} مدخل لغت و معنی`;
+            statusEl.style.color = "#16a34a";
+        } else {
+            statusEl.innerText = "خطا: اطلاعاتی در دیتابیس یافت نشد. لطفاً ساختار نام متغیرهای فایل‌های js را بررسی کنید.";
+            statusEl.style.color = "#dc2626";
+        }
+    };
+
+    function search() {
+        const rawInput = document.getElementById('query').value.trim();
+        const resultsDiv = document.getElementById('results');
+        
+        if (!rawInput) {
+            resultsDiv.innerHTML = '<div class="not-found">لطفاً واژه یا سوال مورد نظر را وارد کنید.</div>';
+            return;
+        }
+
+        const isPattern = /[.?؟]/.test(rawInput);
+        let patternRegex = null;
+        if (isPattern) {
+            const cleanPat = cleanText(rawInput).replace(/[?؟]/g, '.');
+            patternRegex = new RegExp('^' + cleanPat + '$');
+        }
+
+        const q = cleanText(rawInput);
+
+        let exactMatches = [];
+        let patternMatches = [];
+        let startsWith = [];
+        let wordContains = [];
+        let meaningMatches = [];
+
+        const total = allData.length;
+        for (let i = 0; i < total; i++) {
+            const item = allData[i];
+            const w = item.cleanW;
+
+            // ۱. الگوی جدولی
+            if (isPattern && patternRegex && patternRegex.test(w)) {
+                patternMatches.push(item);
+                continue;
+            }
+
+            // ۲. کلمه کاملاً منطبق
+            if (w === q) {
+                exactMatches.push(item);
+                continue;
+            }
+
+            // ۳. کلماتی که با عبارت جستجو شروع می‌شوند
+            if (w.startsWith(q)) {
+                startsWith.push(item);
+                continue;
+            }
+
+            // ۴. کلماتی که این عبارت در خود کلمه است
+            if (w.includes(q)) {
+                wordContains.push(item);
+                continue;
+            }
+
+            // ۵. جستجو در متن معنی:
+            // فقط زمانی فعال می‌شود که عبارت حداقل ۴ حرف داشته باشد، یا بیش از یک کلمه باشد
+            // تا با سرچ حروفی مثل «من» هزاران نتیجه هرز و بی‌ربط ظاهر نشود
+            if ((q.length >= 4 || q.includes(' ')) && item.cleanM.includes(q)) {
+                meaningMatches.push(item);
+            }
+        }
+
+        // سورت کلمات شروع‌شونده بر اساس طول (کلمات کوتاه‌تر و مرتبط‌تر در اولویت)
+        startsWith.sort((a, b) => a.cleanW.length - b.cleanW.length);
+
+        // ترکیب هوشمند نتایج با اولویت دقیق
+        const finalResults = [
+            ...exactMatches,
+            ...patternMatches.slice(0, 40),
+            ...startsWith.slice(0, 30),
+            ...wordContains.slice(0, 20),
+            ...meaningMatches.slice(0, 25)
+        ];
+
+        if (finalResults.length === 0) {
+            resultsDiv.innerHTML = `<div class="not-found">نتیجه‌ای برای «${rawInput}» پیدا نشد.<br><small style="color:#64748b;">اگر سوال جدول است، کلمات کلیدی را جداگانه جستجو کنید.</small></div>`;
+            return;
+        }
+
+        resultsDiv.innerHTML = `<div class="count-info">نمایش ${finalResults.length.toLocaleString('fa-IR')} نتیجه مرتبط:</div>`;
+        const fragment = document.createDocumentFragment();
+
+        finalResults.forEach(item => {
+            const isExact = (item.cleanW === q);
+            const isPat = isPattern && patternRegex && patternRegex.test(item.cleanW);
+            
+            let tagHtml = '';
+            let extraClass = '';
+            if (isExact) {
+                tagHtml = '<span class="tag tag-exact">تطابق کامل</span>';
+                extraClass = ' exact-match';
+            } else if (isPat) {
+                tagHtml = '<span class="tag tag-pattern">تطابق با الگو</span>';
+                extraClass = ' pattern-match';
+            } else if (meaningMatches.includes(item)) {
+                tagHtml = '<span class="tag tag-meaning">یافت‌شده در توضیحات</span>';
+            }
+
+            const div = document.createElement('div');
+            div.className = 'result-item' + extraClass;
+            div.innerHTML = `
+                <div class="word">
+                    <span>${item.w}</span>
+                    ${tagHtml}
+                </div>
+                <div class="meaning">${item.m || 'معنایی ثبت نشده است.'}</div>
+                <div class="source">منبع: ${item.src}</div>
+            `;
+            fragment.appendChild(div);
+        });
+
+        resultsDiv.appendChild(fragment);
+    }
+
+    document.getElementById('query').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') search();
+    });
+</script>
+
+</body>
+</html>
