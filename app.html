@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>دانشیار - حل جدول</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Arial, sans-serif;
+    }
+    body {
+      background-color: #f1f5f9;
+      color: #1e293b;
+      margin: 0;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 600px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .header h1 {
+      font-size: 1.4rem;
+      margin: 0 0 6px 0;
+      color: #0284c7;
+    }
+    .header p {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin: 0;
+    }
+    .search-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .input-wrapper {
+      position: relative;
+      flex: 1;
+    }
+    .search-input {
+      width: 100%;
+      padding: 12px 38px 12px 14px;
+      border-radius: 10px;
+      border: 1.5px solid #cbd5e1;
+      background: #ffffff;
+      color: #0f172a;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus {
+      border-color: #0284c7;
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+    .clear-btn {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      color: #94a3b8;
+      cursor: pointer;
+      display: none;
+      padding: 0 6px;
+    }
+    .search-btn {
+      background-color: #0284c7;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 0 18px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .search-btn:active {
+      background-color: #0369a1;
+    }
+    .status {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+    .results {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .card {
+      background: #ffffff;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      border-right: 5px solid #0284c7;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-right {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .word {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #0369a1;
+    }
+    .category {
+      display: inline-block;
+      align-self: flex-start;
+      font-size: 0.75rem;
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+    .meaning {
+      font-size: 0.9rem;
+      color: #334155;
+      text-align: left;
+      direction: rtl;
+      max-width: 60%;
+      line-height: 1.4;
+    }
+    .empty-state {
+      text-align: center;
+      color: #94a3b8;
+      padding: 30px;
+      background: white;
+      border-radius: 10px;
+      border: 1px dashed #cbd5e1;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>دانشیار (دستیار جدول)</h1>
+    <p>راهنمای کلمات و اطلاعات عمومی</p>
+  </div>
+
+  <div class="search-bar">
+    <div class="input-wrapper">
+      <input type="text" id="searchInput" class="search-input" placeholder="کلمه یا معنی را بنویسید (مثلاً: پایتخت، رستم)...">
+      <button id="clearBtn" class="clear-btn" title="پاک کردن">✕</button>
+    </div>
+    <button id="searchBtn" class="search-btn">جستجو</button>
+  </div>
+
+  <div id="status" class="status">بانک آماده است (۱۰۰ مدخل فعال)</div>
+  <div id="results" class="results"></div>
+</div>
+
+<script>
+  const wordsBank = [
+    {"word":"آب","category":"عمومی","meaning":"مایع حیات، هیدروژن اکسید"},
+    {"word":"آذر","category":"تقویم","meaning":"ماه نهم سال شمسی، آتش"},
+    {"word":"آرش","category":"اساطیر","meaning":"کمانگیر نامدار ایرانی در زمان منوچهر"},
+    {"word":"آهو","category":"جانور","meaning":"غزال، جیران، مرال"},
+    {"word":"اتریش","category":"جغرافیا","meaning":"کشوری در اروپای مرکزی، پایتخت: وین"},
+    {"word":"اردن","category":"جغرافیا","meaning":"کشوری در غرب آسیا، پایتخت: امان"},
+    {"word":"ارمنستان","category":"جغرافیا","meaning":"کشوری در قفقاز، پایتخت: ایروان"},
+    {"word":"اسپانیا","category":"جغرافیا","meaning":"کشوری در ایبری، پایتخت: مادرید"},
+    {"word":"اسکندریه","category":"جغرافیا","meaning":"بندر تاریخی مصر در مدیترانه"},
+    {"word":"افغانستان","category":"جغرافیا","meaning":"همسایه شرقی ایران، پایتخت: کابل"},
+    {"word":"البرز","category":"جغرافیا","meaning":"رشته‌کوه معروف شمال ایران"},
+    {"word":"الجزایر","category":"جغرافیا","meaning":"کشوری در شمال آفریقا، پایتخت: الجزیره"},
+    {"word":"الماس","category":"کانی","meaning":"سخت‌ترین کانی طبیعی، کربن خالص"},
+    {"word":"اندونزی","category":"جغرافیا","meaning":"کشور مجمع‌الجزایری، پایتخت: جاکارتا"},
+    {"word":"انگلیس","category":"جغرافیا","meaning":"پادشاهی متحده، پایتخت: لندن"},
+    {"word":"اورست","category":"جغرافیا","meaning":"بلندترین قله جهان در هیمالیا"},
+    {"word":"ایتالیا","category":"جغرافیا","meaning":"کشوری در جنوب اروپا، پایتخت: رم"},
+    {"word":"ایران","category":"جغرافیا","meaning":"کهن‌دیار فلات ایران، پایتخت: تهران"},
+    {"word":"ایروان","category":"جغرافیا","meaning":"پایتخت کشور ارمنستان"},
+    {"word":"بابل","category":"تاریخ","meaning":"تمدن باستانی بین‌النهرین"},
+    {"word":"باکو","category":"جغرافیا","meaning":"پایتخت جمهوری آذربایجان"},
+    {"word":"ببر","category":"جانور","meaning":"گربه‌سان درنده و راه‌راه"},
+    {"word":"برزیل","category":"جغرافیا","meaning":"بزرگترین کشور آمریکای جنوبی، پایتخت: برازیلیا"},
+    {"word":"برلین","category":"جغرافیا","meaning":"پایتخت کشور آلمان"},
+    {"word":"بغداد","category":"جغرافیا","meaning":"پایتخت عراق"},
+    {"word":"بلبل","category":"پرنده","meaning":"هزاردستان، عندلیب"},
+    {"word":"بهرام","category":"نجوم","meaning":"سیاره مریخ، سیاره سرخ"},
+    {"word":"بیستون","category":"تاریخ","meaning":"کتیبه باستانی داریوش در کرمانشاه"},
+    {"word":"پاریس","category":"جغرافیا","meaning":"پایتخت فرانسه"},
+    {"word":"پاسارگاد","category":"تاریخ","meaning":"نخستین پایتخت هخامنشی و آرامگاه کوروش"},
+    {"word":"پزشک","category":"مشاغل","meaning":"طبیب، دکتر، درمانگر"},
+    {"word":"پلنگ","category":"جانور","meaning":"گربه‌سان درنده خال‌دار"},
+    {"word":"پوپک","category":"پرنده","meaning":"هدهد، شانه‌به‌سر"},
+    {"word":"تاجیکستان","category":"جغرافیا","meaning":"کشور فارسی‌زبان، پایتخت: دوشنبه"},
+    {"word":"تخت‌جمشید","category":"تاریخ","meaning":"پارسه، پایتخت هخامنشی"},
+    {"word":"تهران","category":"جغرافیا","meaning":"پایتخت ایران"},
+    {"word":"تیمور","category":"تاریخ","meaning":"تیمور لنگ، بنیان‌گذار گورکانیان"},
+    {"word":"جام‌جم","category":"ادبیات","meaning":"جام جهان‌بین جمشید در شاهنامه"},
+    {"word":"جمشید","category":"اساطیر","meaning":"پادشاه پیشدادی در شاهنامه"},
+    {"word":"چلچله","category":"پرنده","meaning":"پرستو"},
+    {"word":"حافظ","category":"ادبیات","meaning":"لسان‌الغیب، شاعر شیرازی"},
+    {"word":"خیام","category":"ادبیات","meaning":"ریاضیدان و رباعی‌سرای نیشابوری"},
+    {"word":"دماوند","category":"جغرافیا","meaning":"بلندترین قله ایران"},
+    {"word":"دهخدا","category":"ادبیات","meaning":"علی‌اکبر دهخدا، مؤلف لغت‌نامه"},
+    {"word":"رستم","category":"اساطیر","meaning":"پهلوان نامدار شاهنامه، تهمتن"},
+    {"word":"سعدی","category":"ادبیات","meaning":"مشرف‌الدین مصلح، استاد سخن"},
+    {"word":"سهراب","category":"اساطیر","meaning":"فرزند رستم و تهمینه"},
+    {"word":"سیمرغ","category":"اساطیر","meaning":"مرغ افسانه‌ای شاهنامه"},
+    {"word":"شاهنامه","category":"ادبیات","meaning":"اثر حماسی فردوسی"},
+    {"word":"شیرین","category":"ادبیات","meaning":"معشوقه خسرو و فرهاد"},
+    {"word":"فردوسی","category":"ادبیات","meaning":"سراینده شاهنامه"},
+    {"word":"کوروش","category":"تاریخ","meaning":"بنیان‌گذار شاهنشاهی هخامنشی"},
+    {"word":"مادرید","category":"جغرافیا","meaning":"پایتخت اسپانیا"},
+    {"word":"مریخ","category":"نجوم","meaning":"بهرام، سیاره سرخ"},
+    {"word":"وین","category":"جغرافیا","meaning":"پایتخت اتریش"},
+    {"word":"ابوریحان","category":"دانش","meaning":"بیرونی، دانشمند نامدار"},
+    {"word":"ابوعلی‌سینا","category":"دانش","meaning":"پزشک و فیلسوف بزرگ"},
+    {"word":"آتن","category":"جغرافیا","meaning":"پایتخت یونان"},
+    {"word":"آمستردام","category":"جغرافیا","meaning":"پایتخت هلند"},
+    {"word":"آنکارا","category":"جغرافیا","meaning":"پایتخت ترکیه"},
+    {"word":"ارسطو","category":"فلسفه","meaning":"فیلسوف یونانی، شاگرد افلاطون"},
+    {"word":"افلاطون","category":"فلسفه","meaning":"فیلسوف باستان و استاد ارسطو"},
+    {"word":"اقلیدس","category":"ریاضی","meaning":"ریاضیدان باستان، پدر هندسه"},
+    {"word":"الوند","category":"جغرافیا","meaning":"کوه معروف همدان"},
+    {"word":"ایفل","category":"معماری","meaning":"برج معروف پاریس"},
+    {"word":"ژاپن","category":"جغرافیا","meaning":"کشور آفتاب تابان، پایتخت: توکیو"},
+    {"word":"ساری","category":"جغرافیا","meaning":"مرکز مازندران"},
+    {"word":"سوئد","category":"جغرافیا","meaning":"کشور حوزه اسکاندیناوی، پایتخت: استکهلم"},
+    {"word":"سوئیس","category":"جغرافیا","meaning":"کشور آلپی، پایتخت: برن"},
+    {"word":"شیراز","category":"جغرافیا","meaning":"مهد حافظ و سعدی"},
+    {"word":"طلا","category":"فلز","meaning":"زر، فلز قیمتی زرد رنگ"},
+    {"word":"عطار","category":"ادبیات","meaning":"عطار نیشابوری، خالق منطق‌الطیر"},
+    {"word":"فارابی","category":"فلسفه","meaning":"معلم ثانی، فیلسوف اسلامی"},
+    {"word":"کارون","category":"جغرافیا","meaning":"پرآب‌ترین رود ایران"},
+    {"word":"کاشان","category":"جغرافیا","meaning":"شهر تاریخی، مهد گلاب"},
+    {"word":"کرمانشاه","category":"جغرافیا","meaning":"شهر کهن غرب ایران، مهد بیستون"},
+    {"word":"کیوان","category":"نجوم","meaning":"سیاره زحل"},
+    {"word":"گیلان","category":"جغرافیا","meaning":"استان کرانه خزر"},
+    {"word":"لندن","category":"جغرافیا","meaning":"پایتخت بریتانیا"},
+    {"word":"لوور","category":"موزه","meaning":"موزه مشهور پاریس"},
+    {"word":"مسکو","category":"جغرافیا","meaning":"پایتخت روسیه"},
+    {"word":"مولانا","category":"ادبیات","meaning":"جلال‌الدین محمد بلخی، صاحب مثنوی"},
+    {"word":"ناهید","category":"نجوم","meaning":"زهره، ونوس"},
+    {"word":"نقره","category":"فلز","meaning":"سیم، فلز سفید گرانبها"},
+    {"word":"نوروز","category":"جشن","meaning":"جشن باستانی آغاز بهار"},
+    {"word":"نیویورک","category":"جغرافیا","meaning":"بزرگترین شهر آمریکا"},
+    {"word":"هخامنشیان","category":"تاریخ","meaning":"شاهنشاهی هخامنشی باستان"},
+    {"word":"همدان","category":"جغرافیا","meaning":"هگمتانه باستان، پایتخت مادها"},
+    {"word":"هیمالیا","category":"جغرافیا","meaning":"بلندترین رشته‌کوه جهان"},
+    {"word":"یاس","category":"گل","meaning":"گل خوشبو"},
+    {"word":"یاقوت","category":"کانی","meaning":"سنگ قیمتی و سرخ"},
+    {"word":"یزد","category":"جغرافیا","meaning":"شهر بادگیرها"},
+    {"word":"یونان","category":"جغرافیا","meaning":"مهد تمدن باستان، پایتخت: آتن"}
+  ];
+
+  const searchInput = document.getElementById('searchInput');
+  const searchBtn = document.getElementById('searchBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const statusEl = document.getElementById('status');
+  const resultsEl = document.getElementById('results');
+
+  function doSearch() {
+    const query = searchInput.value.trim();
+    clearBtn.style.display = query ? 'block' : 'none';
+
+    if (!query) {
+      render(wordsBank.slice(0, 15));
+      statusEl.textContent = `بانک آماده است (${wordsBank.length} مدخل فعال)`;
+      return;
+    }
+
+    const isPattern = /[.\-_]/.test(query);
+    let filtered = [];
+
+    if (isPattern) {
+      const regexStr = '^' + query.replace(/[.\-_]/g, '.') + '$';
+      try {
+        const reg = new RegExp(regexStr);
+        filtered = wordsBank.filter(item => reg.test(item.word));
+      } catch (e) {
+        filtered = [];
+      }
+    } else {
+      filtered = wordsBank.filter(item => 
+        item.word.includes(query) || 
+        item.meaning.includes(query) || 
+        item.category.includes(query)
+      );
+    }
+
+    statusEl.textContent = `${filtered.length} نتیجه پیدا شد`;
+    render(filtered);
+  }
+
+  function render(items) {
+    resultsEl.innerHTML = '';
+    if (items.length === 0) {
+      resultsEl.innerHTML = '<div class="empty-state">موردی یافت نشد.</div>';
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    items.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-right">
+          <span class="word">${item.word}</span>
+          <span class="category">${item.category}</span>
+        </div>
+        <div class="meaning">${item.meaning}</div>
+      `;
+      fragment.appendChild(card);
+    });
+    resultsEl.appendChild(fragment);
+  }
+
+  searchBtn.addEventListener('click', doSearch);
+  searchInput.addEventListener('input', doSearch);
+  searchInput.addEventListener('keyup', (e) => {
+    if (e.key === 'Enter') doSearch();
+  });
+  clearBtn.addEventListener('click', () => {
+    searchInput.value = '';
+    doSearch();
+    searchInput.focus();
+  });
+
+  render(wordsBank.slice(0, 15));
+</script>
+
+</body>
+</html>
