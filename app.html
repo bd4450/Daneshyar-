@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>دانشیار - حل جدول</title>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: system-ui, -apple-system, Tahoma, sans-serif;
+      background-color: #f1f5f9;
+      margin: 0;
+      padding: 12px;
+      color: #0f172a;
+    }
+    .card {
+      max-width: 650px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    h1 {
+      margin: 0;
+      text-align: center;
+      font-size: 1.3rem;
+      color: #1e3a8a;
+    }
+    .sub {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #64748b;
+      margin: 4px 0 14px;
+    }
+    .search-box {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    #q {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+    }
+    #q:focus {
+      border-color: #2563eb;
+    }
+    #searchBtn {
+      background-color: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 12px 20px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+    #searchBtn:active {
+      background-color: #1d4ed8;
+      transform: scale(0.96);
+    }
+    #status {
+      font-size: 0.85rem;
+      color: #0284c7;
+      margin-bottom: 12px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .res-item {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 8px;
+    }
+    .res-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .res-word {
+      font-weight: bold;
+      font-size: 1.15rem;
+      color: #1e3a8a;
+    }
+    .res-cat {
+      background: #e0e7ff;
+      color: #3730a3;
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+    .tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .tag {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>دانشیار</h1>
+    <div class="sub">دستیار تخصصی حل جدول و واژه‌نامه آفلاین</div>
+
+    <!-- فرم عمداً حذف شده تا هیچ رفرش یا خطای ۴۰۴ رخ ندهد -->
+    <div class="search-box">
+      <input 
+        id="q" 
+        type="search" 
+        placeholder="جستجوی کلمه، سوال یا الگو (مثال: پاریس، س.ل.م)" 
+        autocomplete="off"
+      />
+      <button id="searchBtn" type="button">جستجو</button>
+    </div>
+
+    <div id="status">در حال بررسی بانک داده...</div>
+    <div id="results"></div>
+  </div>
+
+  <script>
+    // بانک لغات مستقیم و آفلاین
+    const DATABASE = [
+      { w: "مهر", m: ["محبت", "دوستی", "ماه اول پاییز", "خورشید", "نشان و خاتم", "تمبر پستی", "صداق زن", "پیمان"], cat: "چندمعنایی" },
+      { w: "تیر", m: ["خدنگ", "پیکان", "ماه چهارم سال", "سیاره عطارد", "ستون سقف", "گلوله جنگی"], cat: "چندمعنایی" },
+      { w: "شیر", m: ["حیوان درنده", "مایع خوراکی سفید", "شیر آب", "سلطان جنگل", "نماد دلاوری"], cat: "چندمعنایی" },
+      { w: "سیر", m: ["گیاه خوراکی", "متضاد گرسنه", "بیزار و خسته", "گردش و تماشا", "واحد وزن ۷۵ گرم"], cat: "چندمعنایی" },
+      { w: "تار", m: ["ساز زهی اصیل", "رشته باریک مو", "تاریک و کدر", "تار عنکبوت"], cat: "چندمعنایی" },
+      { w: "رود", m: ["جوی بزرگ آب", "ساز موسیقی کهن", "فرزند و جگرگوشه"], cat: "چندمعنایی" },
+      { w: "گور", m: ["قبر و مزار", "گورخر", "دشت و صحرا"], cat: "چندمعنایی" },
+      { w: "شانه", m: ["شانه مو", "کتف و دوش", "لانه زنبور", "کنار جاده"], cat: "چندمعنایی" },
+      { w: "هوش", m: ["عقل و ذکاوت", "قوه درک", "مرگ و نابودی در شعر کهن"], cat: "چندمعنایی" },
+      { w: "چنگ", m: ["ساز زهی کهن", "پنجه دست", "چنگال پرنده", "دستبرد و تسلط"], cat: "چندمعنایی" },
+      { w: "برگ", m: ["اندام سبز گیاه", "توشه و آذوقه", "ساز و نوا", "ورق کاغذ"], cat: "چندمعنایی" },
+      { w: "داد", m: ["عدل و دادگری", "فریاد و فغان", "بخشید"], cat: "چندمعنایی" },
+      { w: "باد", m: ["جریان هوا", "غرور و تکبر", "ورم بدن"], cat: "چندمعنایی" },
+      { w: "سلام", m: ["درود", "تحیت", "سلامتی", "از نام‌های خداوند"], cat: "جدول" },
+      { w: "سالم", m: ["تندرست", "صحیح", "بی‌عیب"], cat: "جدول" },
+      { w: "تسلیم", m: ["گردن نهادن", "اطاعت", "واگذاری"], cat: "جدول" },
+      { w: "پاریس", m: ["پایتخت فرانسه", "عروس شهرها", "شهر نور"], cat: "جغرافیا" },
+      { w: "لندن", m: ["پایتخت انگلیس یا بریتانیا", "شهر ساعت بیگ بن"], cat: "جغرافیا" },
+      { w: "توکیو", m: ["پایتخت ژاپن", "شهر مدرن آسیا"], cat: "جغرافیا" },
+      { w: "مسکو", m: ["پایتخت روسیه", "کاخ کرملین"], cat: "جغرافیا" },
+      { w: "قاهره", m: ["پایتخت مصر", "شهر هزار مناره"], cat: "جغرافیا" },
+      { w: "رم", m: ["پایتخت ایتالیا", "شهر ابدی"], cat: "جغرافیا" },
+      { w: "برلین", m: ["پایتخت آلمان", "دیوار برلین"], cat: "جغرافیا" },
+      { w: "آنکارا", m: ["پایتخت ترکیه"], cat: "جغرافیا" },
+      { w: "نیل", m: ["طولانی‌ترین رود جهان", "رود معروف آفریقا", "رنگ آبی لاجوردی"], cat: "جغرافیا" },
+      { w: "آمازون", m: ["پرآب‌ترین رود جهان", "بزرگ‌ترین جنگل بارانی"], cat: "جغرافیا" },
+      { w: "اورست", m: ["بلندترین قله جهان", "بام دنیا"], cat: "جغرافیا" },
+      { w: "دماوند", m: ["بلندترین قله ایران", "دیو سپید پای در بند"], cat: "جغرافیا" },
+      { w: "بایکال", m: ["عمیق‌ترین دریاچه جهان در سیبری"], cat: "جغرافیا" },
+      { w: "خزر", m: ["بزرگ‌ترین دریاچه جهان", "دریای کاسپین"], cat: "جغرافیا" },
+      { w: "هیدروژن", m: ["سبک‌ترین عنصر جهان", "عنصر شماره یک جدول تناوبی"], cat: "علمی" },
+      { w: "جیوه", m: ["فلز مایع", "سیماب"], cat: "علمی" },
+      { w: "طلا", m: ["زر", "عنصر گرانبها با نماد Au"], cat: "علمی" },
+      { w: "نقره", m: ["سیم", "فلز درخشان سفید Ag"], cat: "علمی" },
+      { w: "گراهام بل", m: ["مخترع تلفن"], cat: "علمی" },
+      { w: "توماس ادیسون", m: ["مخترع لامپ و برق"], cat: "علمی" },
+      { w: "مارکونی", m: ["مخترع رادیو"], cat: "علمی" },
+      { w: "زکریای رازی", m: ["کاشف الکل و جوهر گوگرد", "پزشک ایرانی"], cat: "علمی" },
+      { w: "ابن سینا", m: ["شیخ‌الرئیس", "نویسنده قانون در طب"], cat: "علمی" },
+      { w: "فردوسی", m: ["سراینده شاهنامه", "حکیم طوس"], cat: "ادبیات" },
+      { w: "حافظ", m: ["لسان‌الغیب", "شاعر بزرگ شیراز"], cat: "ادبیات" },
+      { w: "سعدی", m: ["استاد سخن", "صاحب بوستان و گلستان"], cat: "ادبیات" },
+      { w: "رستم", m: ["تهمتن", "پهلوان نامدار شاهنامه", "فرزند زال"], cat: "شاهنامه" },
+      { w: "رخش", m: ["اسب رستم در شاهنامه"], cat: "شاهنامه" },
+      { w: "اسب", m: ["فرس", "بارگی", "سمند", "باره", "کهر"], cat: "مترادف" },
+      { w: "شتر", m: ["ابل", "بعیر", "هیون", "جمل"], cat: "مترادف" },
+      { w: "دست به عصا راه رفتن", m: ["محتاط بودن", "بسیار احتیاط کردن"], cat: "کنایه" },
+      { w: "شتر دیدی ندیدی", m: ["پنهان‌کاری", "سکوت و رازداری"], cat: "کنایه" },
+      { w: "آب در هاون کوبیدن", m: ["کار بیهوده کردن", "اتلاف وقت"], cat: "کنایه" }
+    ];
+
+    function clean(str) {
+      if (!str) return "";
+      return str.toString()
+        .replace(/[ي]/g, "ی")
+        .replace(/[ك]/g, "ک")
+        .replace(/[\u064B-\u065F\u0670]/g, "")
+        .replace(/[\u200C\u200B]/g, " ")
+        .trim();
+    }
+
+    const qInput = document.getElementById("q");
+    const sBtn = document.getElementById("searchBtn");
+    const statusDiv = document.getElementById("status");
+    const resDiv = document.getElementById("results");
+
+    function runSearch() {
+      const val = qInput.value ? qInput.value.trim() : "";
+      const q = clean(val);
+
+      if (!q) {
+        statusDiv.textContent = "لطفاً عبارتی برای جستجو وارد کنید.";
+        resDiv.innerHTML = "";
+        return;
+      }
+
+      statusDiv.textContent = "در حال جستجو...";
+
+      const isPattern = /[._?؟]/.test(q);
+      let found = [];
+
+      if (isPattern) {
+        // جستجوی الگوهای جدول (س.ل.م)
+        const rxStr = "^" + q.replace(/\s+/g, "").replace(/[.?؟_]/g, ".") + "$";
+        const rx = new RegExp(rxStr);
+
+        for (let i = 0; i < DATABASE.length; i++) {
+          if (rx.test(clean(DATABASE[i].w))) {
+            found.push(DATABASE[i]);
+          }
+        }
+      } else {
+        const queryWords = q.split(/\s+/).filter(Boolean);
+
+        for (let i = 0; i < DATABASE.length; i++) {
+          const item = DATABASE[i];
+          const wClean = clean(item.w);
+          const mClean = clean(item.m.join(" "));
+
+          if (wClean === q || wClean.includes(q)) {
+            found.push(item);
+            continue;
+          }
+
+          const match = queryWords.every(qw => wClean.includes(qw) || mClean.includes(qw));
+          if (match) {
+            found.push(item);
+          }
+        }
+      }
+
+      if (found.length === 0) {
+        statusDiv.textContent = "موردی پیدا نشد.";
+        resDiv.innerHTML = "<div style='text-align:center; padding:20px; color:#94a3b8;'>نتیجه‌ای ثبت نشده است.</div>";
+        return;
+      }
+
+      statusDiv.textContent = `${found.length} مورد یافت شد:`;
+      resDiv.innerHTML = found.map(item => `
+        <div class="res-item">
+          <div class="res-header">
+            <span class="res-word">${item.w}</span>
+            <span class="res-cat">${item.cat}</span>
+          </div>
+          <div class="tags-container">
+            ${item.m.map(t => `<span class="tag">${t}</span>`).join("")}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // اتصال مستقیم کلیک و تاچ به دکمه جستجو
+    sBtn.onclick = function(e) {
+      if (e) e.preventDefault();
+      runSearch();
+    };
+
+    // مهار زدن Enter در کیبورد گوشی تا صفحه رفرش نشود
+    qInput.onkeydown = function(e) {
+      if (e.key === "Enter" || e.keyCode === 13) {
+        e.preventDefault();
+        runSearch();
+      }
+    };
+
+    // اعلام وضعیت بلافاصله پس از باز شدن
+    window.onload = function() {
+      statusDiv.textContent = `بانک دانشیار فعال است (${DATABASE.length} مدخل آماده)`;
+    };
+  </script>
+</body>
+</html>
