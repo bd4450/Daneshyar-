@@ -2,64 +2,76 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>دانشیار - جستجوی هوشمند</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دانشیار</title>
 <style>
-:root{ --bg:#f8fafc; --accent:#059669; --border:#e2e8f0; }
-body{ font-family:Tahoma,sans-serif; background:var(--bg); padding:10px; display:flex; flex-direction:column; align-items:center; }
-.search-box{ width:100%; max-width:600px; display:flex; gap:8px; margin-bottom:15px; }
-input{ flex:1; padding:12px; border:2px solid var(--border); border-radius:8px; outline:none; }
-button{ background:var(--accent); color:#fff; border:none; padding:0 20px; border-radius:8px; cursor:pointer; }
-/* استایل کادرهای نتایج */
-.result-section{ width:100%; max-width:600px; display:flex; flex-direction:column; gap:20px; }
-.dict-frame-container{ background:#fff; padding:10px; border:1px solid var(--border); border-radius:8px; }
-.dict-title{ font-weight:bold; margin-bottom:8px; color:var(--accent); font-size:0.9rem; }
-iframe{ width:100%; height:300px; border:1px solid #eee; border-radius:4px; }
+    :root { --accent: #059669; --bg: #f8fafc; }
+    body { font-family: Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 15px; padding-bottom: 80px; }
+    .search-box { display: flex; gap: 8px; margin-bottom: 20px; }
+    input { flex: 1; padding: 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1rem; outline: none; }
+    input:focus { border-color: var(--accent); }
+    
+    .results { margin-bottom: 20px; }
+    .card { background: #fff; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 10px; }
+    
+    /* دکمه‌های پایین صفحه که همیشه هستند */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; padding: 10px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; border-top: 1px solid #e2e8f0; }
+    .nav-btn { background: #f1f5f9; border: none; padding: 10px 5px; border-radius: 8px; font-size: 0.7rem; color: #475569; text-align: center; cursor: pointer; text-decoration: none; }
+    .nav-btn:active { background: var(--accent); color: white; }
 </style>
 </head>
 <body>
 
 <div class="search-box">
-  <input type="text" id="q" placeholder="واژه مورد نظر را تایپ کنید...">
-  <button id="searchBtn">جستجو</button>
+  <input type="text" id="q" placeholder="جستجوی واژه...">
+  <button id="searchBtn" style="background:var(--accent); color:white; border:none; padding:0 20px; border-radius:12px;">جستجو</button>
 </div>
 
-<!-- محل نمایش نتایج -->
-<div class="result-section" id="results"></div>
+<div class="results" id="results"></div>
+
+<div class="bottom-nav">
+  <a id="btn-deh" class="nav-btn" target="_blank">دهخدا</a>
+  <a id="btn-moe" class="nav-btn" target="_blank">معین</a>
+  <a id="btn-ami" class="nav-btn" target="_blank">عمید</a>
+  <a id="btn-aba" class="nav-btn" target="_blank">آبادیس</a>
+</div>
 
 <script>
-var qInput = document.getElementById("q");
-var searchBtn = document.getElementById("searchBtn");
-var resultsDiv = document.getElementById("results");
+// بانک اطلاعاتی شما (اینجا را می‌توانید گسترش دهید)
+const DATA = [
+  ["من", "ضمیر", "ضمیر اول شخص مفرد"],
+  ["آب", "اسم", "مایع حیات"],
+  ["امید", "اسم", "رجا و آرزو"]
+];
 
-function doSearch(){
-  var val = qInput.value.trim();
+const qInput = document.getElementById("q");
+const resultsDiv = document.getElementById("results");
+
+function doSearch() {
+  const val = qInput.value.trim();
   if(!val) return;
+
+  // آپدیت لینک‌های پایین
+  const enc = encodeURIComponent(val);
+  document.getElementById("btn-deh").href = "https://www.vajehyab.com/?q=" + enc + "&d=dehkhoda";
+  document.getElementById("btn-moe").href = "https://www.vajehyab.com/?q=" + enc + "&d=moein";
+  document.getElementById("btn-ami").href = "https://www.vajehyab.com/?q=" + enc + "&d=amid";
+  document.getElementById("btn-aba").href = "https://abadis.ir/fatofa/?q=" + enc;
+
+  // جستجو در بانک خودمان
+  const res = DATA.filter(r => r[0].includes(val));
+  resultsDiv.innerHTML = "";
   
-  // لینک‌های جستجو
-  var urls = [
-    { name: "دهخدا", url: "https://www.vajehyab.com/?q=" + encodeURIComponent(val) + "&d=dehkhoda" },
-    { name: "معین", url: "https://www.vajehyab.com/?q=" + encodeURIComponent(val) + "&d=moein" },
-    { name: "عمید", url: "https://www.vajehyab.com/?q=" + encodeURIComponent(val) + "&d=amid" },
-    { name: "آبادیس", url: "https://abadis.ir/fatofa/?q=" + encodeURIComponent(val) }
-  ];
-
-  resultsDiv.innerHTML = ""; // پاک کردن قبلی‌ها
-
-  urls.forEach(item => {
-    var container = document.createElement("div");
-    container.className = "dict-frame-container";
-    
-    container.innerHTML = `
-      <div class="dict-title">${item.name}</div>
-      <iframe src="${item.url}" title="${item.name}"></iframe>
-    `;
-    
-    resultsDiv.appendChild(container);
-  });
+  if(res.length > 0) {
+    res.forEach(item => {
+      resultsDiv.innerHTML += `<div class="card"><strong>${item[0]}</strong> (${item[1]})<br><small>${item[2]}</small></div>`;
+    });
+  } else {
+    resultsDiv.innerHTML = `<div class="card">موردی یافت نشد. از دکمه‌های پایین برای جستجو در سایت‌ها استفاده کنید.</div>`;
+  }
 }
 
-searchBtn.addEventListener("click", doSearch);
+document.getElementById("searchBtn").onclick = doSearch;
 qInput.addEventListener("keydown", (e) => { if(e.key === "Enter") doSearch(); });
 </script>
 </body>
