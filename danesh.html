@@ -71,3 +71,150 @@ document.getElementById("q").onkeydown = (e) => { if(e.key==="Enter") doSearch()
 </script>
 </body>
 </html>
+/* ========================================================
+   بخش اطلاعات عمومی و جغرافیایی دانشیار (مشاهیر، آثار، جغرافیا)
+   ======================================================== */
+
+// ۱. پایگاه داده اطلاعات عمومی
+const daneshKnowledgeDB = [
+  // --- مشاهیر و آثار (نویسندگان / شعرا) ---
+  { type: "celebrity", role: "شاعر", name: "سعدی", century: 7, country: "ایران", works: ["گلستان", "بوستان", "مواعظ"] },
+  { type: "celebrity", role: "نویسنده", name: "ویکتور هوگو", century: 19, country: "فرانسه", works: ["بینوایان", "گوژپشت نتردام", "مردی که میخندد"] },
+  { type: "celebrity", role: "شاعر", name: "فردوسی", century: 4, country: "ایران", works: ["شاهنامه"] },
+  { type: "celebrity", role: "شاعر", name: "حافظ", century: 8, country: "ایران", works: ["دیوان حافظ"] },
+  { type: "celebrity", role: "شاعر", name: "مولوی", century: 7, country: "ایران", works: ["مثنوی معنوی", "دیوان شمس", "فیه ما فیه"] },
+  { type: "celebrity", role: "نویسنده", name: "صادق هدایت", century: 14, country: "ایران", works: ["بوف کور", "سه قطره خون", "سگ ولگرد"] },
+  { type: "celebrity", role: "نویسنده", name: "لئو تولستوی", century: 19, country: "روسیه", works: ["جنگ و صلح", "آنا کارنینا"] },
+  { type: "celebrity", role: "شاعر", name: "شکسپیر", century: 16, country: "انگلستان", works: ["هملت", "مکبث", "اتلو", "شاه لیر"] },
+
+  // --- جغرافیا: شهرها و استان‌ها ---
+  { type: "geo_place", category: "شهر", name: "شیراز", province: "فارس", country: "ایران" },
+  { type: "geo_place", category: "شهر", name: "مرودشت", province: "فارس", country: "ایران" },
+  { type: "geo_place", category: "شهر", name: "اصفهان", province: "اصفهان", country: "ایران" },
+  { type: "geo_place", category: "شهر", name: "کاشان", province: "اصفهان", country: "ایران" },
+  { type: "geo_place", category: "شهر", name: "تبریز", province: "آذربایجان شرقی", country: "ایران" },
+  { type: "geo_place", category: "شهر", name: "لیون", country: "فرانسه" },
+  { type: "geo_place", category: "شهر", name: "مارسی", country: "فرانسه" },
+
+  // --- عوارض طبیعی (رودها، کوه‌ها، دریاچه‌ها، تنگه‌ها، خلیج‌ها، جزایر) ---
+  { type: "geo_feature", category: "رود", name: "کارون", country: "ایران", province: "خوزستان" },
+  { type: "geo_feature", category: "رود", name: "زاینده رود", country: "ایران", province: "اصفهان" },
+  { type: "geo_feature", category: "رود", name: "سن", country: "فرانسه" },
+  { type: "geo_feature", category: "رود", name: "نیل", country: "مصر" },
+  { type: "geo_feature", category: "کوه", name: "دماوند", country: "ایران", province: "مازندران" },
+  { type: "geo_feature", category: "کوه", name: "سبلان", country: "ایران", province: "اردبیل" },
+  { type: "geo_feature", category: "کوه", name: "دنا", country: "ایران", province: "کهگیلویه و بویراحمد" },
+  { type: "geo_feature", category: "دریاچه", name: "ارومیه", country: "ایران", province: "آذربایجان غربی" },
+  { type: "geo_feature", category: "دریاچه", name: "خزر", country: "ایران" },
+  { type: "geo_feature", category: "دریاچه", name: "بایکال", country: "روسیه" },
+  { type: "geo_feature", category: "تنگه", name: "هرمز", country: "ایران" },
+  { type: "geo_feature", category: "تنگه", name: "بسفر", country: "ترکیه" },
+  { type: "geo_feature", category: "خلیج", name: "فارس", country: "ایران" },
+  { type: "geo_feature", category: "خلیج", name: "مکزیک", country: "مکزیک" },
+  { type: "geo_feature", category: "جزیره", name: "قشم", country: "ایران", province: "هرمزگان" },
+  { type: "geo_feature", category: "جزیره", name: "کیش", country: "ایران", province: "هرمزگان" }
+];
+
+// ۲. محاسبه دقیق تعداد حروف جدول (بدون احتساب فاصله)
+function daneshGetLetterCount(str) {
+  if (!str) return 0;
+  return str.replace(/[\s\u200c]/g, "").length;
+}
+
+// ۳. موتور پردازش جستجوی اطلاعات عمومی
+function searchGeneralKnowledge(query) {
+  if (!query || !query.trim()) return [];
+  
+  const q = query.trim().replace(/ي/g, "ی").replace(/ك/g, "ک");
+  let results = [];
+
+  // بررسی مشاهیر و آثار
+  daneshKnowledgeDB.forEach(item => {
+    if (item.type === "celebrity") {
+      // الف: جستجوی آثار بر اساس نام شخص (مثال: "سعدی" یا "هوگو")
+      if (q.includes(item.name) || item.name.includes(q)) {
+        if (item.works) {
+          item.works.forEach(work => {
+            results.push({
+              title: work,
+              detail: `اثر: ${item.name} (${item.role} قرن ${item.century} ${item.country})`,
+              length: daneshGetLetterCount(work),
+              category: "آثار"
+            });
+          });
+        }
+      }
+
+      // ب: جستجوی نام شخص بر اساس قرن، کشور یا نقش (مثال: "شاعر قرن ۷" یا "نویسنده فرانسه")
+      const matchesCountry = item.country && q.includes(item.country);
+      const matchesCentury = item.century && (q.includes(String(item.century)) || q.includes(`قرن ${item.century}`));
+      const matchesRole = item.role && q.includes(item.role);
+
+      if ((matchesCountry && matchesCentury) || (matchesRole && matchesCentury) || (matchesCountry && matchesRole)) {
+        results.push({
+          title: item.name,
+          detail: `${item.role} قرن ${item.century} (${item.country})`,
+          length: daneshGetLetterCount(item.name),
+          category: "مشاهیر"
+        });
+      }
+    }
+
+    // جغرافیا: شهرها و استان‌ها
+    if (item.type === "geo_place") {
+      const matchLoc = (item.province && q.includes(item.province)) || (item.country && q.includes(item.country));
+      if (matchLoc || q.includes(item.name)) {
+        results.push({
+          title: item.name,
+          detail: `شهر در استان/کشور: ${item.province ? item.province + ' - ' : ''}${item.country}`,
+          length: daneshGetLetterCount(item.name),
+          category: "شهر"
+        });
+      }
+    }
+
+    // عوارض طبیعی (رود، کوه، جزیره، دریاچه و...)
+    if (item.type === "geo_feature") {
+      const matchType = q.includes(item.category);
+      const matchLoc = (item.country && q.includes(item.country)) || (item.province && q.includes(item.province));
+      
+      if (matchLoc || matchType || q.includes(item.name)) {
+        results.push({
+          title: item.name,
+          detail: `${item.category} در ${item.country} ${item.province ? '(' + item.province + ')' : ''}`,
+          length: daneshGetLetterCount(item.name),
+          category: item.category
+        });
+      }
+    }
+  });
+
+  // حذف موارد تکراری
+  const uniqueResults = [];
+  const seen = new Set();
+  results.forEach(res => {
+    if (!seen.has(res.title)) {
+      seen.add(res.title);
+      uniqueResults.push(res);
+    }
+  });
+
+  // مرتب‌سازی بر اساس تعداد حروف (از کوتاه به بلند برای حل جدول)
+  uniqueResults.sort((a, b) => a.length - b.length);
+  return uniqueResults;
+}
+
+// ۴. تابع ساخت کارت خروجی جهت الصاق به صفحه
+function buildGeneralKnowledgeHTML(results) {
+  if (!results || results.length === 0) return "";
+  
+  return results.map(item => `
+    <div class="danesh-result-card">
+      <div class="danesh-result-info">
+        <span class="danesh-result-title">${item.title}</span>
+        <span class="danesh-result-detail">${item.detail}</span>
+      </div>
+      <span class="danesh-badge">${item.length} حرفی</span>
+    </div>
+  `).join("");
+}
