@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>دانشیار - جستجوی هوشمند</title>
+<style>
+:root{ --bg:#f8fafc; --accent:#059669; --border:#e2e8f0; }
+body{ font-family:Tahoma,sans-serif; background:var(--bg); padding:10px; display:flex; flex-direction:column; align-items:center; }
+.search-box{ width:100%; max-width:600px; display:flex; gap:8px; margin-bottom:15px; }
+input{ flex:1; padding:12px; border:2px solid var(--border); border-radius:8px; outline:none; }
+button{ background:var(--accent); color:#fff; border:none; padding:0 20px; border-radius:8px; cursor:pointer; }
+/* استایل کادرهای نتایج */
+.result-section{ width:100%; max-width:600px; display:flex; flex-direction:column; gap:20px; }
+.dict-frame-container{ background:#fff; padding:10px; border:1px solid var(--border); border-radius:8px; }
+.dict-title{ font-weight:bold; margin-bottom:8px; color:var(--accent); font-size:0.9rem; }
+iframe{ width:100%; height:300px; border:1px solid #eee; border-radius:4px; }
+</style>
+</head>
+<body>
+
+<div class="search-box">
+  <input type="text" id="q" placeholder="واژه مورد نظر را تایپ کنید...">
+  <button id="searchBtn">جستجو</button>
+</div>
+
+<!-- محل نمایش نتایج -->
+<div class="result-section" id="results"></div>
+
+<script>
+var qInput = document.getElementById("q");
+var searchBtn = document.getElementById("searchBtn");
+var resultsDiv = document.getElementById("results");
+
+function doSearch(){
+  var val = qInput.value.trim();
+  if(!val) return;
+  
+  // لینک‌های جستجو
+  var urls = [
+    { name: "دهخدا", url: "https://www.vajehyab.com/?q=" + encodeURIComponent(val) + "&d=dehkhoda" },
+    { name: "معین", url: "https://www.vajehyab.com/?q=" + encodeURIComponent(val) + "&d=moein" },
+    { name: "عمید", url: "https://www.vajehyab.com/?q=" + encodeURIComponent(val) + "&d=amid" },
+    { name: "آبادیس", url: "https://abadis.ir/fatofa/?q=" + encodeURIComponent(val) }
+  ];
+
+  resultsDiv.innerHTML = ""; // پاک کردن قبلی‌ها
+
+  urls.forEach(item => {
+    var container = document.createElement("div");
+    container.className = "dict-frame-container";
+    
+    container.innerHTML = `
+      <div class="dict-title">${item.name}</div>
+      <iframe src="${item.url}" title="${item.name}"></iframe>
+    `;
+    
+    resultsDiv.appendChild(container);
+  });
+}
+
+searchBtn.addEventListener("click", doSearch);
+qInput.addEventListener("keydown", (e) => { if(e.key === "Enter") doSearch(); });
+</script>
+</body>
+</html>
