@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>دانشیار</title>
+<style>
+:root{
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --text:#0f172a;
+  --sub:#64748b;
+  --border:#e2e8f0;
+  --accent:#059669;
+  --accent-dark:#047857;
+  --radius:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Vazirmatn",sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:16px 12px 60px;
+}
+.header{
+  width:100%;
+  max-width:560px;
+  text-align:center;
+  margin-bottom:16px;
+}
+.header h1{
+  font-size:1.6rem;
+  font-weight:800;
+  color:var(--accent);
+}
+.header p{
+  font-size:0.85rem;
+  color:var(--sub);
+  margin-top:4px;
+}
+.search-box{
+  width:100%;
+  max-width:560px;
+  position:relative;
+  margin-bottom:12px;
+  display:flex;
+  gap:8px;
+}
+.input-wrapper{
+  position:relative;
+  flex:1;
+}
+input[type="text"]{
+  width:100%;
+  padding:14px 40px 14px 14px;
+  font-size:1rem;
+  border:2px solid var(--border);
+  border-radius:var(--radius);
+  background:var(--card);
+  color:var(--text);
+  outline:none;
+}
+input[type="text"]:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(5,150,105,0.15);
+}
+.clear-btn{
+  position:absolute;
+  left:10px;
+  top:50%;
+  transform:translateY(-50%);
+  background:none;
+  border:none;
+  font-size:1.2rem;
+  color:var(--sub);
+  cursor:pointer;
+  padding:4px 8px;
+  display:none;
+}
+.search-btn{
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  border-radius:var(--radius);
+  padding:0 20px;
+  font-size:0.95rem;
+  font-weight:600;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.search-btn:active{
+  background:var(--accent-dark);
+}
+.dict-sources{
+  width:100%;
+  max-width:560px;
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:6px;
+  margin-bottom:14px;
+}
+.dict-btn{
+  background:#f1f5f9;
+  border:1px solid var(--border);
+  padding:8px 4px;
+  border-radius:8px;
+  font-size:0.75rem;
+  font-weight:600;
+  color:#334155;
+  text-align:center;
+  text-decoration:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:all 0.2s;
+}
+.dict-btn:hover{
+  background:#e2e8f0;
+  color:var(--accent-dark);
+}
+.info-bar{
+  width:100%;
+  max-width:560px;
+  font-size:0.8rem;
+  color:var(--sub);
+  margin-bottom:12px;
+  padding:0 4px;
+  display:flex;
+  justify-content:space-between;
+}
+.results{
+  width:100%;
+  max-width:560px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  border:1px solid var(--border);
+  box-shadow:0 1px 3px rgba(0,0,0,0.04);
+}
+.card-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:8px;
+}
+.word{
+  font-size:1.15rem;
+  font-weight:700;
+  color:var(--text);
+}
+.tag{
+  font-size:0.75rem;
+  background:#ecfdf5;
+  color:var(--accent-dark);
+  border:1px solid #a7f3d0;
+  padding:2px 8px;
+  border-radius:6px;
+  font-weight:600;
+}
+.meaning{
+  font-size:0.95rem;
+  color:#334155;
+  line-height:1.6;
+}
+.source{
+  font-size:0.75rem;
+  color:var(--sub);
+  margin-top:8px;
+  border-top:1px dashed var(--border);
+  padding-top:6px;
+}
+.empty{
+  text-align:center;
+  padding:30px 16px;
+  color:var(--sub);
+  font-size:0.9rem;
+  background:var(--card);
+  border-radius:var(--radius);
+  border:1px solid var(--border);
+}
+.loader{
+  text-align:center;
+  padding:20px;
+  color:var(--accent);
+  font-weight:600;
+  font-size:0.9rem;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>دانشیار</h1>
+  <p>جستجوی واژگان و حل جدول در لغت‌نامه‌ها</p>
+</div>
+
+<div class="search-box">
+  <div class="input-wrapper">
+    <input type="text" id="q" placeholder="کلمه مورد نظر را وارد کنید (مانند: من، آب، امید)..." autocomplete="off">
+    <button class="clear-btn" id="clearBtn" title="پاک‌کردن">×</button>
+  </div>
+  <button class="search-btn" id="searchBtn">جستجو</button>
+</div>
+
+<!-- ۴ لغت‌نامه برای جستجوی مستقیم -->
+<div class="dict-sources" id="dictSources">
+  <a class="dict-btn" id="src-vajehyab" target="_blank">واژه‌یاب</a>
+  <a class="dict-btn" id="src-dehkhoda" target="_blank">لغت‌نامه دهخدا</a>
+  <a class="dict-btn" id="src-moein" target="_blank">فرهنگ معین</a>
+  <a class="dict-btn" id="src-wiktionary" target="_blank">ویکی‌واژه</a>
+</div>
+
+<div class="info-bar">
+  <span id="statText">کلمه‌ای وارد کرده و روی دکمه جستجو بزنید</span>
+  <span id="dbCount"></span>
+</div>
+
+<div class="results" id="results"></div>
+
+<script>
+var DATA = [
+  ["من","ضمایر","ضمیر اول شخص مفرد، خود، خویشتن، واحد وزن معادل سه کیلوگرم"],
+  ["تو","ضمایر","ضمیر دوم شخص مفرد، مخاطب"],
+  ["او","ضمایر","ضمیر سوم شخص مفرد، غایب"],
+  ["ما","ضمایر","ضمیر اول شخص جمع"],
+  ["از","حروف","حرف اضافه، نشانه آغاز، مبدا، سبب، منشأ"],
+  ["به","حروف","حرف اضافه، نشانه مقصد و نسبت | میوه‌ای خوشبو و مقوی"],
+  ["با","حروف","حرف اضافه معیت و همراهی"],
+  ["بی","حروف","پیشوند نفی به معنی فاقد و بدون"],
+  ["در","عمومی","باب، مدخل | حرف اضافه به معنی داخل"],
+  ["بر","عمومی","خشکی، روی، بالای، حاصل و میوه"],
+  ["سر","بدن","رأس، کله، آغاز، سرپرست، قله"],
+  ["پا","بدن","قدم، پای، لنگ، عضو حرکت بدن"],
+  ["دست","بدن","ید، باهو، قوت و توان"],
+  ["دل","بدن","قلب، خاطر، مرکز عاطفه و شجاعت"],
+  ["آب","طبیعت","مایع حیات، ماء، زلال"],
+  ["آتش","عناصر","آذر، هیر، نار، شرار"],
+  ["آسمان","طبیعت","فلک، سپهر، گردون، چرخ"],
+  ["آفتاب","طبیعت","خورشید، مهر، شید، هور"],
+  ["آهو","جانوران","غزال، جیران، خرامان"],
+  ["ابرو","بدن","حاجب، کمان"],
+  ["ابر","طبیعت","سحاب، میغ، غمام"],
+  ["امید","روانشناسی","رجا، آرزو، چشم‌داشت"],
+  ["جهان","عمومی","گیتی، دنیا، عالم، دهر"],
+  ["خانه","عمومی","بیت، منزل، سرای، کاشانه"],
+  ["خرد","روانشناسی","عقل، هوش، دانش"],
+  ["خورشید","نجوم","شمس، مهر، هور، بیضاء"],
+  ["دوست","عمومی","صدیق، رفیق، یار، حبیب"],
+  ["رستم","شاهنامه","پهلوان نامدار ایرانی، تهمتن"],
+  ["ستاره","نجوم","کوکب، نجم، اختر"],
+  ["سعدی","ادبیات","شاعر قرن هفتم، صاحب گلستان و بوستان"],
+  ["فردوسی","ادبیات","سراینده شاهنامه و زنده کننده زبان فارسی"],
+  ["کتاب","عمومی","سفر، مصحف، نبشته"],
+  ["گل","طبیعت","ورد، زهره، شکوفه"],
+  ["ماه","نجوم","بدر، هلال، قمر"],
+  ["مهر","عمومی","محبت، خورشید، ماه اول پاییز"],
+  ["ورزش","عمومی","تربیت بدنی، تمرین جسمانی"]
+];
+
+var qInput = document.getElementById("q");
+var clearBtn = document.getElementById("clearBtn");
+var searchBtn = document.getElementById("searchBtn");
+var resultsDiv = document.getElementById("results");
+var statText = document.getElementById("statText");
+var dbCount = document.getElementById("dbCount");
+
+dbCount.textContent = DATA.length + " مدخل پایه";
+
+// نرمال‌سازی دقیق بدون حذف 'آ'
+function normalize(s){
+  if(!s) return "";
+  return s.replace(/[ي]/g,"ی")
+          .replace(/[ك]/g,"ک")
+          .replace(/[\u064B-\u065F]/g,"")
+          .trim();
+}
+
+function updateQuickLinks(query){
+  var enc = encodeURIComponent(query);
+  document.getElementById("src-vajehyab").href = "https://vajehyab.com/?q=" + enc;
+  document.getElementById("src-dehkhoda").href = "https://vajehyab.com/?q=" + enc + "&d=dehkhoda";
+  document.getElementById("src-moein").href = "https://vajehyab.com/?q=" + enc + "&d=moein";
+  document.getElementById("src-wiktionary").href = "https://fa.wiktionary.org/wiki/" + enc;
+}
+
+function renderResults(items, sourceName){
+  var html = "";
+  for(var i=0; i<items.length; i++){
+    var it = items[i];
+    html += '<div class="card">' +
+            '<div class="card-top">' +
+            '<span class="word">' + it[0] + '</span>' +
+            '<span class="tag">' + (it[1] || "لغت‌نامه") + '</span>' +
+            '</div>' +
+            '<div class="meaning">' + it[2] + '</div>' +
+            '<div class="source">منبع: ' + (sourceName || "بانک لغت‌نامه دانشیار") + '</div>' +
+            '</div>';
+  }
+  resultsDiv.innerHTML = html;
+}
+
+function searchOffline(query){
+  var nq = normalize(query);
+  if(!nq) return [];
+  
+  var exact = [];
+  var starts = [];
+
+  for(var i=0; i<DATA.length; i++){
+    var row = DATA[i];
+    var nw = normalize(row[0]);
+
+    if(nw === nq){
+      exact.push(row);
+    } else if(nq.length > 2 && nw.indexOf(nq) === 0){
+      starts.push(row);
+    }
+  }
+
+  // اگر تطابق دقیق وجود داشت، فقط همان را نشان می‌دهد تا کلمات بی‌ربط نیایند
+  if(exact.length > 0){
+    return exact;
+  }
+  return starts;
+}
+
+function searchOnline(query){
+  resultsDiv.innerHTML = '<div class="loader">در حال بررسی دانشنامه و واژه‌نامه‌ها...</div>';
+  statText.textContent = "در حال جستجوی آنلاین...";
+  
+  var url = "https://fa.wikipedia.org/w/api.php?action=query&list=search&srsearch=" + encodeURIComponent(query) + "&format=json&origin=*&utf8=1&srlimit=3";
+  
+  fetch(url)
+    .then(function(res){ return res.json(); })
+    .then(function(data){
+      if(data && data.query && data.query.search && data.query.search.length > 0){
+        var items = data.query.search.map(function(s){
+          var cleanSnippet = s.snippet.replace(/<[^>]*>/g, "");
+          return [s.title, "دانشنامه‌ای", cleanSnippet + "..."];
+        });
+        renderResults(items, "دانشنامه برخط");
+        statText.textContent = items.length + " نتیجه دانشنامه‌ای یافت شد.";
+      } else {
+        showNotFound(query);
+      }
+    })
+    .catch(function(){
+      showNotFound(query);
+    });
+}
+
+function showNotFound(query){
+  resultsDiv.innerHTML = '<div class="empty">' +
+    'معنی واژه «<b>' + query + '</b>» در بانک اصلی نبود.<br>' +
+    'می‌توانید مستقیماً از ۴ دکمه لغت‌نامه بالای صفحه مشاهده کنید.' +
+    '</div>';
+  statText.textContent = "نتیجه‌ای یافت نشد";
+}
+
+function doSearch(){
+  var val = qInput.value.trim();
+  if(!val){
+    resultsDiv.innerHTML = "";
+    statText.textContent = "لطفاً کلمه‌ای وارد کنید";
+    return;
+  }
+  
+  updateQuickLinks(val);
+  
+  var matches = searchOffline(val);
+  if(matches.length > 0){
+    renderResults(matches, "لغت‌نامه دانشیار");
+    statText.textContent = matches.length + " مورد دقیق یافت شد";
+  } else {
+    searchOnline(val);
+  }
+}
+
+// دکمه جستجو فعال
+searchBtn.addEventListener("click", doSearch);
+
+qInput.addEventListener("keydown", function(e){
+  if(e.key === "Enter"){
+    doSearch();
+  }
+});
+
+qInput.addEventListener("input", function(){
+  clearBtn.style.display = this.value ? "block" : "none";
+});
+
+clearBtn.addEventListener("click", function(){
+  qInput.value = "";
+  clearBtn.style.display = "none";
+  resultsDiv.innerHTML = "";
+  statText.textContent = "در انتظار جستجو...";
+  qInput.focus();
+});
+</script>
+</body>
+</html>
