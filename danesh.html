@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>دانشیار</title>
+<style>
+:root{ --bg:#f8fafc; --card:#ffffff; --text:#0f172a; --sub:#64748b; --border:#e2e8f0; --accent:#059669; --dehkhoda:#0284c7; --moein:#16a34a; --amid:#d97706; --abadis:#7c3aed; --radius:12px; }
+body{ font-family:Tahoma,sans-serif; background:var(--bg); padding:16px 12px; display:flex; flex-direction:column; align-items:center; }
+.search-box{ width:100%; max-width:560px; display:flex; gap:8px; margin-bottom:12px; }
+input{ flex:1; padding:14px; border:2px solid var(--border); border-radius:var(--radius); outline:none; }
+input:focus{ border-color:var(--accent); }
+button{ background:var(--accent); color:#fff; border:none; border-radius:var(--radius); padding:0 20px; font-weight:600; cursor:pointer; }
+.results{ width:100%; max-width:560px; margin-top:10px; }
+.card{ background:#fff; padding:15px; border-radius:var(--radius); border:1px solid var(--border); margin-bottom:10px; border-right:5px solid var(--accent); }
+.tag{ font-size:0.7rem; padding:2px 8px; border-radius:4px; color:#fff; margin-bottom:5px; display:inline-block; }
+.fallback-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; margin-top:15px; }
+.btn-link{ padding:10px; border-radius:8px; text-align:center; color:#fff; text-decoration:none; font-size:0.8rem; }
+</style>
+</head>
+<body>
+
+<div class="search-box">
+  <input type="text" id="q" placeholder="جستجوی واژه...">
+  <button id="searchBtn">جستجو</button>
+</div>
+
+<div class="results" id="results"></div>
+
+<script>
+// دیتابیس (قابل گسترش)
+const DB = [
+  {w:"آب", src:"دهخدا", mean:"مایع حیات"},
+  {w:"آب", src:"معین", mean:"مایعی شفاف و بی‌رنگ"},
+  {w:"امید", src:"دهخدا", mean:"رجا و آرزو"}
+];
+
+function doSearch(){
+  const val = document.getElementById("q").value.trim();
+  const resDiv = document.getElementById("results");
+  if(!val) return;
+  resDiv.innerHTML = "";
+  
+  const found = DB.filter(i => i.w === val);
+  
+  if(found.length > 0){
+    found.forEach(i => {
+      resDiv.innerHTML += `<div class="card">
+        <span class="tag" style="background:var(--accent)">${i.src}</span>
+        <div><strong>${i.w}</strong>: ${i.mean}</div>
+      </div>`;
+    });
+  } else {
+    resDiv.innerHTML = `<div class="card">نتیجه‌ای در بانک یافت نشد.</div>`;
+  }
+  
+  // دکمه‌های جستجوی خارجی (همیشه نمایش داده می‌شوند)
+  const enc = encodeURIComponent(val);
+  resDiv.innerHTML += `
+    <div class="fallback-grid">
+      <a class="btn-link" style="background:var(--dehkhoda)" href="https://www.vajehyab.com/?q=${enc}&d=dehkhoda" target="_blank">دهخدا</a>
+      <a class="btn-link" style="background:var(--moein)" href="https://www.vajehyab.com/?q=${enc}&d=moein" target="_blank">معین</a>
+      <a class="btn-link" style="background:var(--amid)" href="https://www.vajehyab.com/?q=${enc}&d=amid" target="_blank">عمید</a>
+      <a class="btn-link" style="background:var(--abadis)" href="https://abadis.ir/fatofa/?q=${enc}" target="_blank">آبادیس</a>
+    </div>
+  `;
+}
+
+document.getElementById("searchBtn").onclick = doSearch;
+document.getElementById("q").onkeydown = (e) => { if(e.key==="Enter") doSearch(); };
+</script>
+</body>
+</html>
