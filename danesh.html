@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>دانشیار</title>
+<style>
+:root{ 
+  --bg:#f8fafc; 
+  --card:#ffffff; 
+  --text:#0f172a; 
+  --sub:#64748b; 
+  --border:#cbd5e1; 
+  --accent:#059669; 
+  --info-accent:#2563eb;
+  --dehkhoda:#0284c7; 
+  --moein:#16a34a; 
+  --amid:#d97706; 
+  --abadis:#7c3aed; 
+  --radius:12px; 
+}
+body{ 
+  font-family:Tahoma,Segoe UI,sans-serif; 
+  background:var(--bg); 
+  padding:16px 12px; 
+  display:flex; 
+  flex-direction:column; 
+  align-items:center; 
+  color:var(--text);
+  margin:0;
+}
+.app-container{ width:100%; max-width:580px; }
+.search-box{ width:100%; display:flex; gap:8px; margin-bottom:10px; }
+input{ 
+  flex:1; 
+  padding:14px; 
+  border:2px solid var(--border); 
+  border-radius:var(--radius); 
+  outline:none; 
+  font-family:inherit; 
+  font-size:15px; 
+}
+input:focus{ border-color:var(--info-accent); }
+button{ 
+  background:var(--info-accent); 
+  color:#fff; 
+  border:none; 
+  border-radius:var(--radius); 
+  padding:0 22px; 
+  font-weight:600; 
+  cursor:pointer; 
+  font-family:inherit; 
+  font-size:15px;
+}
+.quick-tags{
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  padding-bottom:8px;
+  margin-bottom:12px;
+  white-space:nowrap;
+}
+.q-chip{
+  background:#e2e8f0;
+  color:#334155;
+  border-radius:20px;
+  padding:5px 12px;
+  font-size:12px;
+  cursor:pointer;
+  border:none;
+}
+.q-chip:hover{ background:#cbd5e1; }
+.results{ width:100%; }
+
+/* کارت‌های اطلاعات عمومی و حل جدول */
+.danesh-result-card{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:#ffffff;
+  border:1px solid #e2e8f0;
+  border-right:5px solid var(--info-accent);
+  padding:12px 14px;
+  margin-bottom:8px;
+  border-radius:var(--radius);
+  box-shadow:0 1px 3px rgba(0,0,0,0.04);
+}
+.danesh-result-info{ display:flex; flex-direction:column; gap:4px; }
+.danesh-result-title{ font-size:16px; font-weight:bold; color:#0f172a; }
+.danesh-result-detail{ font-size:12px; color:var(--sub); }
+.danesh-badge{
+  background-color:var(--info-accent);
+  color:#ffffff;
+  padding:5px 12px;
+  border-radius:20px;
+  font-size:13px;
+  font-weight:bold;
+  white-space:nowrap;
+  margin-right:10px;
+}
+
+/* کارت‌های لغت‌نامه */
+.card{ background:#fff; padding:14px; border-radius:var(--radius); border:1px solid var(--border); margin-bottom:10px; border-right:5px solid var(--accent); }
+.tag{ font-size:0.75rem; padding:3px 8px; border-radius:4px; color:#fff; margin-bottom:6px; display:inline-block; }
+.fallback-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; margin-top:15px; }
+.btn-link{ padding:10px; border-radius:8px; text-align:center; color:#fff; text-decoration:none; font-size:0.8rem; font-weight:bold; }
+.section-title{ font-size:13px; color:var(--sub); margin:14px 0 6px 0; font-weight:bold; }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <div class="search-box">
+    <input type="text" id="q" placeholder="مثال: اثر سعدی، شهر فارس، رود ایران، شاعر قرن ۷">
+    <button id="searchBtn">جستجو</button>
+  </div>
+
+  <!-- تگ‌های جستجوی سریع نمونه -->
+  <div class="quick-tags">
+    <button class="q-chip" onclick="quickSearch('سعدی')">آثار سعدی</button>
+    <button class="q-chip" onclick="quickSearch('فارس')">شهرهای فارس</button>
+    <button class="q-chip" onclick="quickSearch('رود')">رودخانه‌ها</button>
+    <button class="q-chip" onclick="quickSearch('کوه')">کوه‌ها</button>
+    <button class="q-chip" onclick="quickSearch('شاعر قرن ۷')">شاعر قرن ۷</button>
+    <button class="q-chip" onclick="quickSearch('فرانسه')">جغرافیای فرانسه</button>
+  </div>
+
+  <div class="results" id="results"></div>
+</div>
+
+<script>
+// ۱. دیتابیس واژه‌نامه
+const DB = [
+  {w:"آب", src:"دهخدا", mean:"مایع حیات"},
+  {w:"آب", src:"معین", mean:"مایعی شفاف و بی‌رنگ"},
+  {w:"امید", src:"دهخدا", mean:"رجا و آرزو"}
+];
+
+// ۲. پایگاه جامع اطلاعات عمومی و جدول
+const daneshKnowledgeDB = [
+  // --- مشاهیر و آثار (شعرا و نویسندگان) ---
+  { type: "celebrity", role: "شاعر", name: "سعدی", century: "7", country: "ایران", works: ["گلستان", "بوستان", "مواعظ", "طیبات"] },
+  { type: "celebrity", role: "شاعر", name: "حافظ", century: "8", country: "ایران", works: ["دیوان حافظ"] },
+  { type: "celebrity", role: "شاعر", name: "فردوسی", century: "4", country: "ایران", works: ["شاهنامه"] },
+  { type: "celebrity", role: "شاعر", name: "مولوی", century: "7", country: "ایران", works: ["مثنوی معنوی", "دیوان شمس", "فیه ما فیه"] },
+  { type: "celebrity", role: "شاعر", name: "نظامی گنجوی", century: "6", country: "ایران", works: ["مخزن الاسرار", "خسرو و شیرین", "لیلی و مجنون", "هفت پیکر", "اسکندرنامه"] },
+  { type: "celebrity", role: "شاعر", name: "عطار نیشابوری", century: "6", country: "ایران", works: ["منطق الطیر", "تذکره الاولیا", "الهی نامه", "مصیبت نامه"] },
+  { type: "celebrity", role: "نویسنده", name: "صادق هدایت", century: "14", country: "ایران", works: ["بوف کور", "سه قطره خون", "سگ ولگرد", "زنده به گور"] },
+  { type: "celebrity", role: "نویسنده", name: "ویکتور هوگو", century: "19", country: "فرانسه", works: ["بینوایان", "گوژپشت نتردام", "مردی که میخندد", "کارگران دریا"] },
+  { type: "celebrity", role: "نویسنده", name: "لئو تولستوی", century: "19", country: "روسیه", works: ["جنگ و صلح", "آنا کارنینا", "رستاخیز"] },
+  { type: "celebrity", role: "شاعر", name: "شکسپیر", century: "16", country: "انگلستان", works: ["هملت", "مکبث", "اتلو", "شاه لیر", "رومئو و ژولیت"] },
+
+  // --- جغرافیا: شهرها و استان‌ها ---
+  { type: "geo_place", category: "شهر", name: "شیراز", province: "فارس", country: "ایران" },
+  { type: "geo_place", category: "شهر", name: "مرودشت", province: "فارس", country: "ایران" },
+  { type: "geo_place", category: "شهر", name: "جهرم", province: "فارس", country: "ایران" },
+  { type: "geo_place", category: "شهر", name: "کازرون", province: "فارس", country: "ایران" },
+  { type: "geo_place", category: "شهر", name: "اصفهان", province: "اصفهان", country: "ایران" },
+  { type: "geo_place", category: "شهر", name: "کاشان", province: "اصفهان", country: "ایران" },
+  { type: "geo_place", category: "شهر", name: "نجف آباد", province: "اصفهان", country: "ایران" },
+  { type: "geo_place", category: "شهر", name: "تبریز", province: "آذربایجان شرقی", country: "ایران" },
+  { type: "geo_place", category: "شهر", name: "مراغه", province: "آذربایجان شرقی", country: "ایران" },
+  { type: "geo_place", category: "شهر", name: "لیون", country: "فرانسه" },
+  { type: "geo_place", category: "شهر", name: "مارسی", country: "فرانسه" },
+  { type: "geo_place", category: "شهر", name: "نیس", country: "فرانسه" },
+
+  // --- عوارض طبیعی (رودها، کوه‌ها، دریاچه‌ها، خلیج‌ها، جزایر، تنگه‌ها) ---
+  { type: "geo_feature", category: "رود", name: "کارون", country: "ایران", province: "خوزستان" },
+  { type: "geo_feature", category: "رود", name: "کرخه", country: "ایران", province: "خوزستان" },
+  { type: "geo_feature", category: "رود", name: "دز", country: "ایران", province: "خوزستان" },
+  { type: "geo_feature", category: "رود", name: "زاینده رود", country: "ایران", province: "اصفهان" },
+  { type: "geo_feature", category: "رود", name: "ارس", country: "ایران", province: "آذربایجان" },
+  { type: "geo_feature", category: "رود", name: "سن", country: "فرانسه" },
+  { type: "geo_feature", category: "رود", name: "دانوب", country: "اروپا" },
+  { type: "geo_feature", category: "رود", name: "نیل", country: "مصر" },
+  { type: "geo_feature", category: "رود", name: "آمازون", country: "برزیل" },
+
+  { type: "geo_feature", category: "کوه", name: "دماوند", country: "ایران", province: "مازندران" },
+  { type: "geo_feature", category: "کوه", name: "سبلان", country: "ایران", province: "اردبیل" },
+  { type: "geo_feature", category: "کوه", name: "سهند", country: "ایران", province: "آذربایجان شرقی" },
+  { type: "geo_feature", category: "کوه", name: "دنا", country: "ایران", province: "کهگیلویه و بویراحمد" },
+  { type: "geo_feature", category: "کوه", name: "الوند", country: "ایران", province: "همدان" },
+  { type: "geo_feature", category: "کوه", name: "اورست", country: "نپال" },
+
+  { type: "geo_feature", category: "دریاچه", name: "ارومیه", country: "ایران", province: "آذربایجان غربی" },
+  { type: "geo_feature", category: "دریاچه", name: "خزر", country: "ایران" },
+  { type: "geo_feature", category: "دریاچه", name: "وان", country: "ترکیه" },
+  { type: "geo_feature", category: "دریاچه", name: "بایکال", country: "روسیه" },
+
+  { type: "geo_feature", category: "تنگه", name: "هرمز", country: "ایران" },
+  { type: "geo_feature", category: "تنگه", name: "بسفر", country: "ترکیه" },
+  { type: "geo_feature", category: "تنگه", name: "جبل الطارق", country: "اسپانیا" },
+
+  { type: "geo_feature", category: "خلیج", name: "فارس", country: "ایران" },
+  { type: "geo_feature", category: "خلیج", name: "مکزیک", country: "مکزیک" },
+  { type: "geo_feature", category: "خلیج", name: "بنگال", country: "هند" },
+
+  { type: "geo_feature", category: "جزیره", name: "قشم", country: "ایران", province: "هرمزگان" },
+  { type: "geo_feature", category: "جزیره", name: "کیش", country: "ایران", province: "هرمزگان" },
+  { type: "geo_feature", category: "جزیره", name: "ابوموسی", country: "ایران", province: "هرمزگان" }
+];
+
+// نرمال‌سازی و یکسان‌سازی کلمات جستجو (تبدیل اعداد فارسی و حروفی)
+function normalizeText(text) {
+  if (!text) return "";
+  let t = text.trim().replace(/ي/g, "ی").replace(/ك/g, "ک").replace(/[\u200c]/g, " ");
+  t = t.replace(/اول|یکم/g, "1")
+       .replace(/دوم/g, "2")
+       .replace(/سوم/g, "3")
+       .replace(/چهارم/g, "4")
+       .replace(/پنجم/g, "5")
+       .replace(/ششم/g, "6")
+       .replace(/هفتم/g, "7")
+       .replace(/هشتم/g, "8")
+       .replace(/نهم/g, "9")
+       .replace(/دهم/g, "10")
+       .replace(/چهاردهم/g, "14")
+       .replace(/شانزدهم/g, "16")
+       .replace(/نوزدهم/g, "19")
+       .replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
+  return t.toLowerCase();
+}
+
+// محاسبه تعداد حروف برای جدول
+function getLetterCount(str) {
+  if (!str) return 0;
+  return str.replace(/[\s\u200c]/g, "").length;
+}
+
+// موتور جستجوی هوشمند سوالات جدولی
+function searchGeneralKnowledge(rawQuery) {
+  const q = normalizeText(rawQuery);
+  const words = q.split(/\s+/).filter(w => w && !["در","از","به","و","اثر","آثار","کدام","نام","های","های"].includes(w));
+  let results = [];
+
+  daneshKnowledgeDB.forEach(item => {
+    // ۱. مشاهیر و آثار
+    if (item.type === "celebrity") {
+      const nameNorm = normalizeText(item.name);
+      const isNameMatched = q.includes(nameNorm) || words.some(w => nameNorm.includes(w));
+
+      // اگر نام شخص آمد، آثار او را نشان بده
+      if (isNameMatched && item.works) {
+        item.works.forEach(work => {
+          results.push({
+            title: work,
+            detail: `اثر: ${item.name} (${item.role} قرن ${item.century} ${item.country})`,
+            length: getLetterCount(work)
+          });
+        });
+      }
+
+      // جستجو بر اساس قرن و کشور و نقش (مثال: شاعر قرن ۷ ایران)
+      const roleMatch = item.role && q.includes(normalizeText(item.role));
+      const countryMatch = item.country && q.includes(normalizeText(item.country));
+      const centuryMatch = item.century && q.includes(item.century);
+
+      if ((centuryMatch && countryMatch) || (centuryMatch && roleMatch) || (roleMatch && countryMatch) || isNameMatched) {
+        results.push({
+          title: item.name,
+          detail: `${item.role} قرن ${item.century} (${item.country})`,
+          length: getLetterCount(item.name)
+        });
+      }
+    }
+
+    // ۲. شهرها و استان‌ها
+    if (item.type === "geo_place") {
+      const matchProv = item.province && q.includes(normalizeText(item.province));
+      const matchCountry = item.country && q.includes(normalizeText(item.country));
+      const matchCity = q.includes(normalizeText(item.name));
+      const isCityIntent = q.includes("شهر") || q.includes("شهرهای");
+
+      if (matchCity || (matchProv && (isCityIntent || words.length === 1)) || (matchCountry && isCityIntent)) {
+        results.push({
+          title: item.name,
+          detail: `شهر واقع در ${item.province ? 'استان ' + item.province + '، ' : ''}کشور ${item.country}`,
+          length: getLetterCount(item.name)
+        });
+      }
+    }
+
+    // ۳. عوارض طبیعی (رود، کوه، جزیره، دریاچه، تنگه، خلیج)
+    if (item.type === "geo_feature") {
+      const catNorm = normalizeText(item.category);
+      const nameNorm = normalizeText(item.name);
+      const matchCat = q.includes(catNorm);
+      const matchCountry = item.country && q.includes(normalizeText(item.country));
+      const matchProv = item.province && q.includes(normalizeText(item.province));
+      const matchName = q.includes(nameNorm);
+
+      if (matchName || matchCat || (matchCountry && (matchCat || words.length > 1)) || (matchProv && matchCat)) {
+        results.push({
+          title: item.name,
+          detail: `${item.category} در ${item.country} ${item.province ? '(' + item.province + ')' : ''}`,
+          length: getLetterCount(item.name)
+        });
+      }
+    }
+  });
+
+  // حذف موارد تکراری بر اساس عنوان
+  const unique = [];
+  const map = new Map();
+  for (const item of results) {
+    if (!map.has(item.title)) {
+      map.set(item.title, true);
+      unique.push(item);
+    }
+  }
+
+  // مرتب‌سازی نتایج: از کمترین تعداد حروف به بیشترین (جهت حل سریع جدول)
+  return unique.sort((a, b) => a.length - b.length);
+}
+
+// تابع اجرای جستجو
+function doSearch() {
+  const val = document.getElementById("q").value.trim();
+  const resDiv = document.getElementById("results");
+  if (!val) return;
+  resDiv.innerHTML = "";
+
+  let foundSomething = false;
+
+  // ۱. بررسی بانک لغت‌نامه
+  const dictFound = DB.filter(i => i.w === val);
+  if (dictFound.length > 0) {
+    foundSomething = true;
+    resDiv.innerHTML += `<div class="section-title">معنای واژه:</div>`;
+    dictFound.forEach(i => {
+      resDiv.innerHTML += `<div class="card">
+        <span class="tag" style="background:var(--accent)">${i.src}</span>
+        <div><strong>${i.w}</strong>: ${i.mean}</div>
+      </div>`;
+    });
+  }
+
+  // ۲. بررسی بانک اطلاعات عمومی و جدول
+  const generalFound = searchGeneralKnowledge(val);
+  if (generalFound.length > 0) {
+    foundSomething = true;
+    resDiv.innerHTML += `<div class="section-title">پاسخ‌های جدولی (${generalFound.length} مورد به ترتیب تعداد حروف):</div>`;
+    generalFound.forEach(item => {
+      resDiv.innerHTML += `
+        <div class="danesh-result-card">
+          <div class="danesh-result-info">
+            <span class="danesh-result-title">${item.title}</span>
+            <span class="danesh-result-detail">${item.detail}</span>
+          </div>
+          <span class="danesh-badge">${item.length} حرفی</span>
+        </div>
+      `;
+    });
+  }
+
+  // اگر هیچ موردی نبود
+  if (!foundSomething) {
+    resDiv.innerHTML = `<div class="card" style="border-right-color:#ef4444">نتیجه‌ای با عبارت «${val}» در بانک دانشیار یافت نشد.</div>`;
+  }
+
+  // لینک‌های جستجوی خارجی
+  const enc = encodeURIComponent(val);
+  resDiv.innerHTML += `
+    <div class="fallback-grid">
+      <a class="btn-link" style="background:var(--dehkhoda)" href="https://www.vajehyab.com/?q=${enc}&d=dehkhoda" target="_blank">دهخدا</a>
+      <a class="btn-link" style="background:var(--moein)" href="https://www.vajehyab.com/?q=${enc}&d=moein" target="_blank">معین</a>
+      <a class="btn-link" style="background:var(--amid)" href="https://www.vajehyab.com/?q=${enc}&d=amid" target="_blank">عمید</a>
+      <a class="btn-link" style="background:var(--abadis)" href="https://abadis.ir/fatofa/?q=${enc}" target="_blank">آبادیس</a>
+    </div>
+  `;
+}
+
+function quickSearch(word) {
+  document.getElementById("q").value = word;
+  doSearch();
+}
+
+document.getElementById("searchBtn").onclick = doSearch;
+document.getElementById("q").onkeydown = (e) => { if (e.key === "Enter") doSearch(); };
+</script>
+</body>
+</html>
