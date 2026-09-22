@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشیار - واژه‌یاب و یار جدول</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 12px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            max-width: 768px;
+            margin: 0 auto;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            background: #e2e8f0;
+            padding: 4px;
+            border-radius: 12px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 8px;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--card-bg);
+            color: var(--primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Search Section */
+        .search-box {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 16px;
+        }
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus {
+            border-color: var(--primary);
+        }
+
+        .dict-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .dict-btn {
+            padding: 10px;
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .dict-btn:hover {
+            background: #e2e8f0;
+        }
+
+        /* Inline Preview Frame */
+        #previewWrap {
+            display: none;
+            margin-top: 16px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .pv-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #f1f5f9;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .pv-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #334155;
+        }
+
+        .pv-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .pv-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            color: #64748b;
+            padding: 4px;
+        }
+
+        .pv-btn:hover {
+            color: var(--text);
+        }
+
+        iframe {
+            width: 100%;
+            height: 450px;
+            border: none;
+        }
+
+        .pv-tip {
+            font-size: 12px;
+            color: #64748b;
+            padding: 8px 12px;
+            background: #fffbe0;
+            border-bottom: 1px solid #fef08a;
+        }
+
+        /* GK Helper Styling */
+        .gk-filters {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .gk-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .gk-group-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .gk-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .gk-chip {
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .gk-badge {
+            background: #e2e8f0;
+            color: #475569;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .count-info {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Tabs Header -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('dict')">📖 واژه‌یاب</button>
+        <button class="tab-btn" onclick="switchTab('gk')">🧩 یار جدول (اطلاعات عمومی)</button>
+    </div>
+
+    <!-- TAB 1: Dictionary & Online Preview -->
+    <div id="tab-dict" class="tab-content active">
+        <div class="search-box">
+            <input type="text" id="dictInput" placeholder="کلمه مورد نظر را وارد کنید..." oninput="updateDictLinks()">
+            <div class="dict-buttons">
+                <a id="src-abadis" class="dict-btn" onclick="openPreview('آبادیس', this.href); return false;">آبادیس</a>
+                <a id="src-amid" class="dict-btn" onclick="openPreview('عمید', this.href); return false;">فرهنگ عمید</a>
+                <a id="src-dehkhoda" class="dict-btn" onclick="openPreview('دهخدا', this.href); return false;">دهخدا</a>
+                <a id="src-moein" class="dict-btn" onclick="openPreview('معین', this.href); return false;">فرهنگ معین</a>
+            </div>
+        </div>
+
+        <!-- Inline Preview Frame -->
+        <div id="previewWrap">
+            <div class="pv-header">
+                <span id="pvTitle" class="pv-title">پیش‌نمایش</span>
+                <div class="pv-actions">
+                    <button class="pv-btn" title="تلاشم مجدد" onclick="reloadPreview()">↻</button>
+                    <a id="pvExternal" class="pv-btn" title="باز کردن در صفحه جدید" target="_blank">↗</a>
+                    <button class="pv-btn" title="بستن" onclick="closePreview()">×</button>
+                </div>
+            </div>
+            <div class="pv-tip">💡 اگر سایت در این کادر باز نشد، دکمه ↗ را بزنید تا در مرورگر باز شود.</div>
+            <iframe id="previewFrame" src="about:blank"></iframe>
+        </div>
+    </div>
+
+    <!-- TAB 2: GK Crossword Helper -->
+    <div id="tab-gk" class="tab-content">
+        <div class="search-box">
+            <input type="text" id="gkInput" placeholder="جستجوی موضوع یا عبارت جدول (مثلاً: صادق هدایت، فارس، آفریقا)..." oninput="renderGK()">
+            <div class="gk-filters">
+                <input type="number" id="gkLength" placeholder="تعداد حروف (مثلاً ۴)" min="1" max="20" oninput="renderGK()">
+                <button class="dict-btn" style="width: auto; padding: 0 12px;" onclick="clearGKFilters()">حذف فیلتر</button>
+            </div>
+        </div>
+
+        <div id="gkCount" class="count-info"></div>
+        <div id="gkResults"></div>
+    </div>
+</div>
+
+<script>
+    // Tab switching
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        if (tabName === 'dict') {
+            document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            document.getElementById('tab-dict').classList.add('active');
+        } else {
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            document.getElementById('tab-gk').classList.add('active');
+            renderGK();
+        }
+    }
+
+    // Dictionary Links Update
+    function updateDictLinks() {
+        const query = encodeURIComponent(document.getElementById('dictInput').value.trim());
+        document.getElementById('src-abadis').href = query ? `https://abadis.ir/fatofa/${query}/` : '#';
+        document.getElementById('src-amid').href = query ? `https://vajehyab.com/?q=${query}&d=amid` : '#';
+        document.getElementById('src-dehkhoda').href = query ? `https://vajehyab.com/?q=${query}&d=dehkhoda` : '#';
+        document.getElementById('src-moein').href = query ? `https://vajehyab.com/?q=${query}&d=moein` : '#';
+    }
+
+    // Preview Frame Controls
+    function openPreview(name, url) {
+        if (!url || url.endsWith('#')) return;
+        document.getElementById('pvTitle').innerText = 'پیش‌نمایش: ' + name;
+        document.getElementById('previewFrame').src = url;
+        document.getElementById('pvExternal').href = url;
+        document.getElementById('previewWrap').style.display = 'block';
+    }
+
+    function closePreview() {
+        document.getElementById('previewWrap').style.display = 'none';
+        document.getElementById('previewFrame').src = 'about:blank';
+    }
+
+    function reloadPreview() {
+        const frame = document.getElementById('previewFrame');
+        frame.src = frame.src;
+    }
+
+    // GK Database & Logic
+    const GK_DATA = [
+        {
+            category: "نویسندگان و شاعران",
+            title: "آثار صادق هدایت",
+            items: ["بوف کور", "سه قطره خون", "سگ ولگرد", "زنده به گور", "پروین دختر ساسان", "علویه خانم", "حاجی آقا", "افسانه آفرینش"]
+        },
+        {
+            category: "نویسندگان و شاعران",
+            title: "آثار جلال آل احمد",
+            items: ["مدیر مدرسه", "نون والقلم", "دید و بازدید", "سه تار", "زن زیادی", "سرگذشت کندوها", "خسی در میقات"]
+        },
+        {
+            category: "نویسندگان و شاعران",
+            title: "آثار بزرگ علوی",
+            items: ["چشمهایش", "چمدان", "ورق پاره‌های زندان", "سالاری‌ها", "میرزا"]
+        },
+        {
+            category: "نویسندگان و شاعران",
+            title: "آثار چارلز دیکنز",
+            items: ["الیور توئیست", "دیوید کاپرفیلد", "داستان دو شهر", "آرزوهای بزرگ", "اسکروچ"]
+        },
+        {
+            category: "استان‌های ایران",
+            title: "شهرهای استان فارس",
+            items: ["شیراز", "مرودشت", "کازرون", "جهرم", "فسا", "داراب", "لار", "آباده", "فیروزآباد", "اقلید", "سپیدان"]
+        },
+        {
+            category: "استان‌های ایران",
+            title: "شهرهای استان خوزستان",
+            items: ["اهواز", "دزفول", "آبادان", "خرمشهر", "ماهشهر", "اندیمشک", "ایذه", "شوش", "شوشتر", "مسجد سلیمان"]
+        },
+        {
+            category: "استان‌های ایران",
+            title: "شهرهای استان اصفهان",
+            items: ["اصفهان", "کاشان", "خمینی شهر", "نجف آباد", "شاهین شهر", "شهرضا", "نطنز", "نائین", "خوانسار", "گلپایگان"]
+        },
+        {
+            category: "کشورها و پایتخت‌ها",
+            title: "کشورهای اروپایی و پایتخت‌ها",
+            items: ["فرانسه (پاریس)", "آلمان (برلین)", "ایتالیا (رم)", "اسپانیا (مادرید)", "انگلستان (لندن)", "روسیه (مسکو)", "یونان (آتنان)"]
+        },
+        {
+            category: "دانش و علوم",
+            title: "مخترعان و کاشفان",
+            items: ["ادیسون (برق)", "گراهام بل (تلفن)", "پاستور (واکسن)", "فلمینگ (پنسلین)", "برادران رایت (هواپیما)", "نوبل (دینامیت)"]
+        }
+    ];
+
+    function cleanLen(str) {
+        // Calculate length ignoring spaces and brackets
+        const clean = str.replace(/\(.*?\)/g, '').replace(/\s+/g, '').replace(/‌/g, '');
+        return clean.length;
+    }
+
+    function clearGKFilters() {
+        document.getElementById('gkInput').value = '';
+        document.getElementById('gkLength').value = '';
+        renderGK();
+    }
+
+    function renderGK() {
+        const query = document.getElementById('gkInput').value.trim().toLowerCase();
+        const targetLen = parseInt(document.getElementById('gkLength').value);
+        const container = document.getElementById('gkResults');
+        container.innerHTML = '';
+
+        let matchGroupCount = 0;
+        let totalItemsCount = 0;
+
+        GK_DATA.forEach(group => {
+            const groupTitleMatches = group.title.toLowerCase().includes(query) || group.category.toLowerCase().includes(query);
+            
+            // Filter items in group
+            const filteredItems = group.items.filter(item => {
+                const itemMatches = query ? item.toLowerCase().includes(query) : true;
+                const lenMatches = targetLen ? cleanLen(item) === targetLen : true;
+                return (groupTitleMatches || itemMatches) && lenMatches;
+            });
+
+            if (filteredItems.length > 0) {
+                matchGroupCount++;
+                totalItemsCount += filteredItems.length;
+
+                const card = document.createElement('div');
+                card.className = 'gk-card';
+
+                const titleEl = document.createElement('div');
+                titleEl.className = 'gk-group-title';
+                titleEl.innerHTML = `<span>${group.title}</span><span style="font-size:12px; color:#64748b; font-weight:normal;">${group.category}</span>`;
+                card.appendChild(titleEl);
+
+                const itemsWrap = document.createElement('div');
+                itemsWrap.className = 'gk-items';
+
+                filteredItems.forEach(item => {
+                    const chip = document.createElement('div');
+                    chip.className = 'gk-chip';
+                    chip.innerHTML = `${item} <span class="gk-badge">${cleanLen(item)} حرف</span>`;
+                    itemsWrap.appendChild(chip);
+                });
+
+                card.appendChild(itemsWrap);
+                container.appendChild(card);
+            }
+        });
+
+        document.getElementById('gkCount').innerText = query || targetLen 
+            ? `یافته‌ها: ${totalItemsCount} مورد در ${matchGroupCount} دسته` 
+            : `نمایش کل اطلاعات عمومی (${GK_DATA.length} دسته)`;
+    }
+
+    // Initial call
+    updateDictLinks();
+</script>
+
+</body>
+</html>
