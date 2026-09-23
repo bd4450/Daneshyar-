@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشیار - حل جدول و دانشنامه</title>
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --primary-blue: #1d4ed8;
+            --primary-blue-hover: #1e40af;
+            --text-dark: #111827;
+            --text-muted: #4b5563;
+            --border-color: #d1d5db;
+            --radius: 14px;
+            --shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+
+        body { background-color: var(--bg-color); color: var(--text-dark); min-height: 100vh; padding: 24px 14px; display: flex; flex-direction: column; align-items: center; }
+
+        .container { width: 100%; max-width: 680px; }
+
+        .search-wrapper { background: #ffffff; border-radius: var(--radius); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08); border: 2px solid #e5e7eb; display: flex; align-items: center; padding: 6px; margin-bottom: 14px; transition: all 0.2s ease; }
+        .search-input { flex: 1; border: none; outline: none; padding: 14px 16px; font-size: 1.25rem; font-weight: 700; color: #0f172a; background: transparent; width: 100%; }
+        .search-btn { background-color: var(--primary-blue); color: #ffffff; border: none; border-radius: 10px; padding: 14px 24px; font-size: 1.05rem; font-weight: 700; cursor: pointer; box-shadow: 0 3px 8px rgba(29, 78, 216, 0.35); }
+
+        .tabs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .tab-btn { border: none; padding: 13px 8px; border-radius: var(--radius); color: #ffffff; font-size: 0.95rem; font-weight: 800; cursor: pointer; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        
+        .tab-dehkhoda  { background: linear-gradient(135deg, #FF6B6B, #FF8E53); }
+        .tab-abadis    { background: linear-gradient(135deg, #4E65FF, #92EFFD); }
+        .tab-amid      { background: linear-gradient(135deg, #11998e, #38ef7d); }
+        .search-btn { background-color: var(--primary-blue); color: #ffffff; border: none; border-radius: 10px; padding: 14px 24px; font-size: 1.05rem; font-weight: 700; cursor: pointer; box-shadow: 0 3px 8px rgba(29, 78, 216, 0.35); }
+
+        .tabs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .tab-btn { border: none; padding: 13px 8px; border-radius: var(--radius); color: #ffffff; font-size: 0.95rem; font-weight: 800; cursor: pointer; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        
+        .tab-dehkhoda  { background: linear-gradient(135deg, #FF6B6B, #FF8E53); }
+        .tab-abadis    { background: linear-gradient(135deg, #4E65FF, #92EFFD); }
+        .tab-amid      { background: linear-gradient(135deg, #11998e, #38ef7d); }
+        .tab-moein     { background: linear-gradient(135deg, #FC466B, #3F5EFB); }
+        .tab-vajehyab  { background: linear-gradient(135deg, #F37335, #FDC830); }
+        .tab-wiktionary{ background: linear-gradient(135deg, #654: 8px 14px; border-radius: 8px; font-size: 0.95rem; font-weight: 700; }
+        
+        .source-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--border-color); }
+        .source-tabs .tab-btn { background: #f8fafc; border: 1px solid #cbd5e1; color: #334155; padding: 6px 12px; font-size: 0.85rem; box-shadow: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="search-wrapper">
+        <input type="text" id="queryInput" class="search-input" placeholder="جستجوی کلمه یا نویسنده..." autocomplete="off">
+        <button id="searchBtn" class="search-btn" onclick="executeSearch()">جستجو</button>
+    </div>
+
+    <div class="tabs-grid">
+        <button class="tab-btn tab-dehkhoda" onclick="openExternal('dehkhoda')">دهخدا<span class="tab-sub">لغت‌نامه</span></button>
+        <button class="tab-btn tab-abadis" onclick="openExternal('abadis')">آبادیس<span class="tab-sub">لغت‌نامه</span></button>
+        <button class="tab-btn tab-amid" onclick="openExternal('amid')">عمید<span class="tab-sub">فرهنگ</span></button>
+        <button class="tab-btn tab-moein" onclick="openExternal('moein')">معین<span class="tab-sub">فرهنگ</span></button>
+        <button class="tab-btn tab-vajehyab" onclick="openExternal('vajehyab')">واژه‌یاب<span class="tab-sub">جستجو</span></button>
+        <button class="tab-btn tab-wiktionary" onclick="openExternal('wiktionary')">ویکی‌واژه<span class="tab-sub">لغت آزاد</span></button>
+        <button class="tab-btn tab-wikipedia" onclick="openExternal('wikipedia')">ویکی‌پدیا<span class="tab-sub">دانشنامه</span></button>
+    </div>
+
+    <div id="results" class="results-box"></div>
+</div>
+
+<script>
+    const LOCAL_DATA = [
+        { keys: ["تولستوی"], title: "آثار لئو تولستوی", category: "ادبیات روسیه", desc: "بر [{word: "رستاخیز", letters: "ر-س-ت-ا-خ-ی-ز"}, {word: "جنگ و صلح", letters: "ج-ن-گ-و-ص-ل-ح"}] },
+        { keys: ["جزایر ژاپن"], title: "جزایر کشور ژاپن", category: "جغرافیا", desc: "جزایر اصلی ژاپن:", items:ایر کشور ژاپن", category: "جغرافیا", desc: "جزایر اصلی ژاپن:", items: [{word: "هونشو"}, {word: "هوکایدو"}, {word: "کیوشو"}, {word: "شیکوکو"}] }
+    ];
+
+    function openExternal(source) {
+        const q = document.getElementById('queryInput').value.trim();
+        if (!q) return;
+        const urls = {
+            dehkhoda: `https://vajehyab.com/?q=${q}&d=dehkhoda`,
+            abadis: `https://abadis.ir/fatofa/${q}/`,
+            amid: `https://vajehyab.com/?q=${q}&d=amid`,
+            moein: `https://vajehyab.com/?q=${q}&d=moein`,
+            vajehyab: `https://vajehyab.com/?q=${q}`,
+            wiktionary: `https://fa.wiktionary.org/wiki/${q}`,
+            wikipedia: `https://fa.wikipedia.org/wiki/Special:Search?search=${q}`
+        };
+        window.open(urls[source], '_blank');
+    }
+
+    function executeSearch() {
+        const q = document.getElementById('queryInput').value.trim();
+        const container = document.getElementById('results');
+        container.innerHTML = '';
+        const match = LOCAL_DATA.find(item => item.keys.some(k => q.includes(k)));
+        
+        if (match) {
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header"><div class="card-title">${match.title}</div><div class="card-badge">${match.category}</div></div>
+                    <p>${match.desc}</p>
+                    <div class="answers-grid">${match.items.map(i => `<div class="answer-pill">${i.word}</div>`).join('')}</div>
+                </div>`;
+        } else {
+            container.innerHTML = `<div class="card">موردی یافت نشد. برای جستجوی آزاد از دکمه‌های بالا استفاده کنید.</div>`;
+        }
+    }
+</script>
+</body>
+</html>
