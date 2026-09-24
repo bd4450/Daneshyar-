@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشیار - دانشنامه جامع و حل جدول</title>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+            --badge-bg: #eff6ff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Tahoma, system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 16px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 680px;
+        }
+
+        .search-wrapper {
+            background: #ffffff;
+            border-radius: var(--radius);
+            border: 2px solid #cbd5e1;
+            display: flex;
+            padding: 4px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 12px 14px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #1e293b;
+            background: transparent;
+        }
+
+        .search-btn {
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .search-btn:active {
+            background: var(--primary-hover);
+        }
+
+        .tabs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));
+            gap: 5px;
+            margin-bottom: 14px;
+        }
+
+        .tab-btn {
+            border: none;
+            padding: 8px 4px;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            transition: opacity 0.2s ease;
+        }
+
+        .tab-btn:active {
+            opacity: 0.85;
+        }
+
+        .tab-dehkhoda   { background: #ef4444; }
+        .tab-abadis     { background: #3b82f6; }
+        .tab-amid       { background: #10b981; }
+        .tab-moein      { background: #8b5cf6; }
+        .tab-vajehyab   { background: #f59e0b; }
+        .tab-wiktionary { background: #ec4899; }
+        .tab-wikipedia  { background: #334155; }
+
+        .results-box {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 8px;
+        }
+
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .card-badge {
+            background: var(--badge-bg);
+            color: var(--primary);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: bold;
+        }
+
+        .card-desc {
+            font-size: 0.88rem;
+            color: #334155;
+            line-height: 1.7;
+            margin-bottom: 10px;
+        }
+
+        .answers-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .answer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        .word-title {
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: #0f172a;
+        }
+
+        .word-meta {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .word-spelled {
+            font-size: 0.8rem;
+            color: var(--muted);
+            letter-spacing: 1px;
+        }
+
+        .word-count {
+            background: #e2e8f0;
+            color: #334155;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .loading {
+            text-align: center;
+            color: var(--muted);
+            padding: 24px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="search-wrapper">
+        <input type="text" id="queryInput" class="search-input" placeholder="واژه، نام مشاهیر یا سوال جدول..." autocomplete="off">
+        <button class="search-btn" onclick="executeSearch()">جستجو</button>
+    </div>
+
+    <!-- تب‌های دسترسی سریع (ویکی‌پدیا جایگزین ویکی‌داده شد) -->
+    <div class="tabs-grid">
+        <button class="tab-btn tab-dehkhoda" onclick="openExternal('dehkhoda')">دهخدا</button>
+        <button class="tab-btn tab-abadis" onclick="openExternal('abadis')">آبادیس</button>
+        <button class="tab-btn tab-amid" onclick="openExternal('amid')">عمید</button>
+        <button class="tab-btn tab-moein" onclick="openExternal('moein')">معین</button>
+        <button class="tab-btn tab-vajehyab" onclick="openExternal('vajehyab')">واژه‌یاب</button>
+        <button class="tab-btn tab-wiktionary" onclick="openExternal('wiktionary')">ویکی‌واژه</button>
+        <button class="tab-btn tab-wikipedia" onclick="openExternal('wikipedia')">ویکی‌پدیا</button>
+    </div>
+
+    <div id="results" class="results-box">
+        <div class="card">
+            <div class="card-desc" style="text-align: center; color: var(--muted); margin-bottom: 0;">
+                کلمه یا سوال مورد نظر خود را بنویسید تا نتایج هم‌زمان از چند دانشنامه واکاوی شود.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // بانک محلی سریع برای کلمات پرتکرار جدول و اطلاعات عمومی
+    const LOCAL_DATA = [
+        {
+            keys: ["تولستوی", "لئو تولستوی", "آثار تولستوی"],
+            title: "آثار مشهور لئو تولستوی",
+            category: "ادبیات / جدول",
+            desc: "عناوین پرتکرار در جداول متقاطع:",
+            items: [
+                { word: "رستاخیز" },
+                { word: "جنگ و صلح" },
+                { word: "آنا کارنینا" },
+                { word: "مرگ ایوان ایلیچ" },
+                { word: "قزاق‌ها" },
+                { word: "سعادت خانوادگی" },
+                { word: "اعتراف" }
+            ]
+        },
+        {
+            keys: ["جزایر ژاپن", "جزیره های ژاپن", "جزیره ژاپن"],
+            title: "جزایر کشور ژاپن",
+            category: "جغرافیا / جدول",
+            desc: "مهم‌ترین جزایر مجمع‌الجزایر ژاپن:",
+            items: [
+                { word: "هونشو" },
+                { word: "هوکایدو" },
+                { word: "کیوشو" },
+                { word: "شیکوکو" },
+                { word: "اوکیناوا" },
+                { word: "تسوشیما" },
+                { word: "سادو" }
+            ]
+        },
+        {
+            keys: ["عناصر شیمیایی", "عنصرها", "جدول تناوبی"],
+            title: "عناصر شیمیایی پرکاربرد در جدول",
+            category: "شیمی / جدول",
+            desc: "نمونه عناصر کوتاه و چند حرفی مناسب جدول:",
+            items: [
+                { word: "طلا" },
+                { word: "مس" },
+                { word: "روی" },
+                { word: "آهن" },
+                { word: "سرب" },
+                { word: "ید" },
+                { word: "نقره" },
+                { word: "جیوه" }
+            ]
+        }
+    ];
+
+    function cleanWord(str) {
+        return (str || '').replace(/[«»""''ـ\(\)\.\،؛]/g, '').trim();
+    }
+
+    function formatLetters(word) {
+        const pure = cleanWord(word).replace(/\s+/g, '');
+        const letters = pure.split('');
+        return {
+            count: letters.length,
+            spelled: letters.join('-')
+        };
+    }
+
+    function renderItems(items) {
+        return items.map(item => {
+            const w = cleanWord(item.word);
+            const meta = formatLetters(w);
+            return `
+                <div class="answer-row">
+                    <div>
+                        <span class="word-title">${w}</span>
+                        ${item.desc ? `<div style="font-size:0.75rem; color:var(--muted);">${item.desc}</div>` : ''}
+                    </div>
+                    <div class="word-meta">
+                        <span class="word-spelled">${meta.spelled}</span>
+                        <span class="word-count">${meta.count} حرف</span>
+                    </div>
+                </div>`;
+        }).join('');
+    }
+
+    // ۱. دریافت خلاصه دقیق از دانشنامه ویکی‌پدیا فارسی
+    async function queryWikipediaSummary(term) {
+        try {
+            const url = `https://fa.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(term)}`;
+            const res = await fetch(url);
+            if (!res.ok) return null;
+            const data = await res.json();
+            if (data.type === 'disambiguation' || !data.extract) return null;
+            return {
+                title: data.title,
+                extract: data.extract,
+                description: data.description || ''
+            };
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // ۲. جستجوی پیشرفته عناوین مرتبط در ویکی‌پدیا فارسی (جهت استخراج جواب‌های چندحرفی)
+    async function queryWikipediaSearch(term) {
+        try {
+            const url = `https://fa.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(term)}&format=json&origin=*&srlimit=7`;
+            const res = await fetch(url);
+            if (!res.ok) return [];
+            const data = await res.json();
+            const list = data.query?.search || [];
+            return list.map(item => ({
+                word: item.title,
+                desc: (item.snippet || '').replace(/<[^>]+>/g, '').slice(0, 70) + '...'
+            }));
+        } catch (e) {
+            return [];
+        }
+    }
+
+    // ۳. دریافت تعریف لغوی از ویکی‌واژه
+    async function queryWiktionary(term) {
+        try {
+            const url = `https://fa.wiktionary.org/w/api.php?action=query&prop=extracts&explaintext=1&titles=${encodeURIComponent(term)}&format=json&origin=*`;
+            const res = await fetch(url);
+            if (!res.ok) return null;
+            const data = await res.json();
+            const pages = data.query?.pages || {};
+            const pageId = Object.keys(pages)[0];
+
+            if (pageId && pageId !== "-1") {
+                const text = pages[pageId].extract || '';
+                const lines = text.split('\n')
+                    .map(l => l.trim())
+                    .filter(l => l && !l.startsWith('=') && l.length > 3);
+                return lines.slice(0, 2).join(' | ');
+            }
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // ۴. دانشنامه تکمیلی DuckDuckGo Instant Answer
+    async function queryDuckDuckGo(term) {
+        try {
+            const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(term)}&format=json&origin=*&no_html=1&skip_disambig=1`;
+            const res = await fetch(url);
+            if (!res.ok) return null;
+            const data = await res.json();
+            if (data.AbstractText) {
+                return {
+                    title: data.Heading || term,
+                    extract: data.AbstractText,
+                    source: data.AbstractSource || 'دانشنامه بین‌المللی'
+                };
+            }
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // اجرای جستجوی فراگیر و چندمنبعی
+    async function executeSearch() {
+        const input = document.getElementById('queryInput');
+        const q = input.value.trim();
+        const resContainer = document.getElementById('results');
+
+        if (!q) {
+            resContainer.innerHTML = `<div class="card"><div class="card-desc" style="text-align: center;">لطفاً کلمه‌ای برای جستجو بنویسید.</div></div>`;
+            return;
+        }
+
+        // ۱. بررسی بانک داده‌های محلی
+        const localMatch = LOCAL_DATA.find(item => item.keys.some(k => q.includes(k) || k.includes(q)));
+        if (localMatch) {
+            resContainer.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">${localMatch.title}</span>
+                        <span class="card-badge">${localMatch.category}</span>
+                    </div>
+                    <div class="card-desc">${localMatch.desc}</div>
+                    <div class="answers-grid">
+                        ${renderItems(localMatch.items)}
+                    </div>
+                </div>`;
+            return;
+        }
+
+        resContainer.innerHTML = `<div class="card loading">در حال واکاوی دانشنامه‌ها و پایگاه‌های اطلاعاتی...</div>`;
+
+        try {
+            // واکاوی هم‌زمان ۴ منبع معتبر
+            const [wikiSummaryRes, wikiSearchRes, wiktionaryRes, ddgRes] = await Promise.allSettled([
+                queryWikipediaSummary(q),
+                queryWikipediaSearch(q),
+                queryWiktionary(q),
+                queryDuckDuckGo(q)
+            ]);
+
+            const wikiSum = wikiSummaryRes.status === 'fulfilled' ? wikiSummaryRes.value : null;
+            const wikiList = wikiSearchRes.status === 'fulfilled' ? wikiSearchRes.value : [];
+            const wiktionary = wiktionaryRes.status === 'fulfilled' ? wiktionaryRes.value : null;
+            const ddg = ddgRes.status === 'fulfilled' ? ddgRes.value : null;
+
+            let html = '';
+
+            // کارت ۱: تعریف اصلی از دانشنامه ویکی‌پدیا
+            if (wikiSum) {
+                const meta = formatLetters(wikiSum.title);
+                html += `
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">${wikiSum.title}</span>
+                            <span class="card-badge">دانشنامه ویکی‌پدیا</span>
+                        </div>
+                        <div class="card-desc">${wikiSum.extract}</div>
+                        <div class="answer-row">
+                            <span class="word-title">${wikiSum.title}</span>
+                            <div class="word-meta">
+                                <span class="word-spelled">${meta.spelled}</span>
+                                <span class="word-count">${meta.count} حرف</span>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+
+            // کارت ۲: معنی لغوی از ویکی‌واژه
+            if (wiktionary) {
+                html += `
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">${q}</span>
+                            <span class="card-badge">معنی واژه (ویکی‌واژه)</span>
+                        </div>
+                        <div class="card-desc">${wiktionary}</div>
+                    </div>`;
+            }
+
+            // کارت ۳: عناوین و کلمات مرتبط تفکیک‌شده برای جدول (از نتایج ویکی‌پدیا)
+            if (wikiList && wikiList.length > 0) {
+                html += `
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">عناوین مرتبط جهت حل جدول</span>
+                            <span class="card-badge">بانک مدخل‌ها</span>
+                        </div>
+                        <div class="card-desc">کلمات و موارد متناظر به همراه شمارش حروف:</div>
+                        <div class="answers-grid">
+                            ${renderItems(wikiList)}
+                        </div>
+                    </div>`;
+            }
+
+            // کارت ۴: دانشنامه کمکی در صورت نبود مقاله در ویکی‌پدیا فارسی
+            if (!wikiSum && ddg) {
+                html += `
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">${ddg.title}</span>
+                            <span class="card-badge">${ddg.source}</span>
+                        </div>
+                        <div class="card-desc">${ddg.extract}</div>
+                    </div>`;
+            }
+
+            // اگر هیچ پاسخی پیدا نشد، شمارنده مستقیم حروف واژه نمایش داده شود
+            if (!html) {
+                const meta = formatLetters(q);
+                html = `
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">${q}</span>
+                            <span class="card-badge">تفکیک حروف</span>
+                        </div>
+                        <div class="card-desc">مدخل مستقیمی در دانشنامه‌ها یافت نشد؛ می‌توانید از تب‌های بالای صفحه برای لغت‌نامه‌ها استفاده کنید.</div>
+                        <div class="answer-row">
+                            <span class="word-title">${q}</span>
+                            <div class="word-meta">
+                                <span class="word-spelled">${meta.spelled}</span>
+                                <span class="word-count">${meta.count} حرف</span>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+
+            resContainer.innerHTML = html;
+
+        } catch (error) {
+            resContainer.innerHTML = `<div class="card"><div class="card-desc" style="color: #b91c1c;">خطا در واکشی داده‌ها. لطفاً اتصال اینترنت را بازبینی کنید.</div></div>`;
+        }
+    }
+
+    // هدایت دقیق تب‌های لغت‌نامه‌ای و دانشنامه‌ای
+    function openExternal(source) {
+        const q = document.getElementById('queryInput').value.trim();
+        if (!q) {
+            alert('لطفاً ابتدا کلمه مورد نظر را وارد کنید.');
+            return;
+        }
+
+        const eq = encodeURIComponent(q);
+        const urls = {
+            dehkhoda: `https://vajehyab.com/?q=${eq}&d=dehkhoda`,
+            abadis: `https://abadis.ir/fatofa/${eq}/`,
+            amid: `https://vajehyab.com/?q=${eq}&d=amid`,
+            moein: `https://vajehyab.com/?q=${eq}&d=moein`,
+            vajehyab: `https://vajehyab.com/?q=${eq}`,
+            wiktionary: `https://fa.wiktionary.org/wiki/${eq}`,
+            wikipedia: `https://fa.wikipedia.org/wiki/${eq}`
+        };
+
+        if (urls[source]) {
+            window.open(urls[source], '_blank');
+        }
+    }
+
+    document.getElementById('queryInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            executeSearch();
+        }
+    });
+</script>
+
+</body>
+</html>
