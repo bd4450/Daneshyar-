@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دانشیار - دانشنامه جامع و حل جدول</title>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+            --badge-bg: #eff6ff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Tahoma, system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 16px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 720px;
+        }
+
+        .search-wrapper {
+            background: #ffffff;
+            border-radius: var(--radius);
+            border: 2px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            padding: 4px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            gap: 4px;
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 10px 12px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: #1e293b;
+            background: transparent;
+        }
+
+        .len-input {
+            width: 80px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            outline: none;
+            padding: 8px 4px;
+            text-align: center;
+            font-size: 0.82rem;
+            color: #334155;
+            background: #f8fafc;
+        }
+
+        .search-btn {
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 0.92rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .search-btn:active {
+            background: var(--primary-hover);
+        }
+
+        .tabs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));
+            gap: 5px;
+            margin-bottom: 14px;
+        }
+
+        .tab-btn {
+            border: none;
+            padding: 8px 4px;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            transition: opacity 0.2s ease;
+        }
+
+        .tab-btn:active { opacity: 0.85; }
+
+        .tab-dehkhoda   { background: #ef4444; }
+        .tab-abadis     { background: #3b82f6; }
+        .tab-amid       { background: #10b981; }
+        .tab-moein      { background: #8b5cf6; }
+        .tab-vajehyab   { background: #f59e0b; }
+        .tab-wiktionary { background: #ec4899; }
+        .tab-wikipedia  { background: #334155; }
+
+        .results-box {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 8px;
+        }
+
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .card-badge {
+            background: var(--badge-bg);
+            color: var(--primary);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: bold;
+        }
+
+        .card-desc {
+            font-size: 0.88rem;
+            color: #334155;
+            line-height: 1.7;
+            margin-bottom: 10px;
+        }
+
+        .answers-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .answer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        .word-title {
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: #0f172a;
+        }
+
+        .word-meta {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .word-spelled {
+            font-size: 0.8rem;
+            color: var(--muted);
+            letter-spacing: 1px;
+        }
+
+        .word-count {
+            background: #e2e8f0;
+            color: #334155;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .loading {
+            text-align: center;
+            color: var(--muted);
+            padding: 24px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="search-wrapper">
+        <input type="text" id="queryInput" class="search-input" placeholder="مثال: سبک های نقاشی، آثار تولستوی، رودی در فرانسه، تنگه های جهان..." autocomplete="off">
+        <input type="number" id="lenInput" class="len-input" placeholder="تعداد حرف" min="1" max="15">
+        <button class="search-btn" onclick="executeSearch()">جستجو</button>
+    </div>
+
+    <!-- تب‌های دسترسی مستقیم -->
+    <div class="tabs-grid">
+        <button class="tab-btn tab-dehkhoda" onclick="openExternal('dehkhoda')">دهخدا</button>
+        <button class="tab-btn tab-abadis" onclick="openExternal('abadis')">آبادیس</button>
+        <button class="tab-btn tab-amid" onclick="openExternal('amid')">عمید</button>
+        <button class="tab-btn tab-moein" onclick="openExternal('moein')">معین</button>
+        <button class="tab-btn tab-vajehyab" onclick="openExternal('vajehyab')">واژه‌یاب</button>
+        <button class="tab-btn tab-wiktionary" onclick="openExternal('wiktionary')">ویکی‌واژه</button>
+        <button class="tab-btn tab-wikipedia" onclick="openExternal('wikipedia')">ویکی‌پدیا</button>
+    </div>
+
+    <div id="results" class="results-box">
+        <div class="card">
+            <div class="card-desc" style="text-align: center; color: var(--muted); margin-bottom: 0;">
+                عنوان، سبک، اثر، جغرافیا، مشاهیر یا سوال جدول را جستجو کنید.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // بانک محلی سریع و پاسخ‌های آماده جدول
+    const LOCAL_DATA = [
+        {
+            keys: ["سبک های نقاشی", "سبک های هنر", "مکتب های هنری", "سبک های هنری"],
+            title: "سبک‌ها و مکاتب مشهور نقاشی و هنر",
+            category: "هنر / جدول",
+            desc: "مکاتب پرکاربرد در جداول متقاطع:",
+            items: [
+                { word: "رئالیسم", desc: "واقع‌گرایی" },
+                { word: "کوبیسم", desc: "حجم‌گری" },
+                { word: "امپرسیونیسم", desc: "دریافت‌گری" },
+                { word: "سورئالیسم", desc: "فراواقع‌گرایی" },
+                { word: "اکسپرسیونیسم", desc: "هیجان‌نمایی" },
+                { word: "رمانتیسم" },
+                { word: "دادائیسم" },
+                { word: "فوویسم" },
+                { word: "مینی‌مالیسم" },
+                { word: "مدرنیسم" },
+                { word: "کلاسیسیسم" },
+                { word: "گوتیک" },
+                { word: "باروک" },
+                { word: "روکوکو" }
+            ]
+        },
+        {
+            keys: ["سبک های ادبی", "سبک های شعر فارسی", "مکتب های ادبی"],
+            title: "سبک‌های ادبی و شعری",
+            category: "ادبیات / جدول",
+            desc: "سبک‌های عمده شعر و نثر فارسی و جهان:",
+            items: [
+                { word: "خراسانی", desc: "سبک ترکستانی" },
+                { word: "عراقی" },
+                { word: "هندی", desc: "سبک اصفهانی" },
+                { word: "بازگشت", desc: "بازگشت ادبی" },
+                { word: "نیمایی", desc: "شعر نو" },
+                { word: "سپید", desc: "شعر شاملویی" },
+                { word: "سمبولیسم", desc: "نمادگرایی" },
+                { word: "پاراناسیسم" },
+                { word: "ناتورالیسم", desc: "طبیعت‌گرایی" }
+            ]
+        },
+        {
+            keys: ["تولستوی", "لئو تولستوی", "آثار تولستوی", "نویسنده جنگ و صلح"],
+            title: "آثار مشهور لئو تولستوی",
+            category: "ادبیات / مشاهیر",
+            desc: "عناوین پرتکرار آثار تولستوی:",
+            items: [
+                { word: "رستاخیز" }, { word: "جنگ و صلح" }, { word: "آنا کارنینا" },
+                { word: "مرگ ایوان ایلیچ" }, { word: "قزاق‌ها" }, { word: "سعادت خانوادگی" }, { word: "اعتراف" }, { word: "حاجی مراد" }
+            ]
+        },
+        {
+            keys: ["تنگه های جهان", "تنگه های معروف", "تنگه"],
+            title: "تنگه‌های مهم و استراتژیک جهان",
+            category: "جغرافیا / جدول",
+            desc: "تنگه‌های پرکاربرد در جداول:",
+            items: [
+                { word: "هرمز", desc: "خلیج فارس به دریای عمان" },
+                { word: "مالاکا", desc: "اقیانوس هند به آرام" },
+                { word: "بسفر", desc: "دریای سیاه به مرمره (ترکیه)" },
+                { word: "داردانل", desc: "دریای مرمره به اژه (ترکیه)" },
+                { word: "جبل‌الطارق", desc: "مدیترانه به اطلس" },
+                { word: "باب‌المندب", desc: "دریای سرخ به خلیج عدن" },
+                { word: "برینگ", desc: "بین روسیه و آلاسکا" },
+                { word: "ماژلان", desc: "جنوب آمریکای جنوبی" },
+                { word: "دوور", desc: "بین انگلیس و فرانسه" }
+            ]
+        },
+        {
+            keys: ["خلیج های جهان", "خلیج های معروف", "خلیج"],
+            title: "خلیج‌های مهم دنیا",
+            category: "جغرافیا / جدول",
+            desc: "خلیج‌های پرکاربرد در جدول:",
+            items: [
+                { word: "فارس", desc: "خلیج همیشگی فارس" },
+                { word: "مکزیک", desc: "بزرگ‌ترین خلیج جهان" },
+                { word: "بنگال", desc: "بزرگ‌ترین خلیج باز دنیا" },
+                { word: "هودسن", desc: "خلیجی در کانادا" },
+                { word: "عقبه" }, { word: "سویز" }, { word: "عدن" }, { word: "بیسکای" }
+            ]
+        },
+        {
+            keys: ["رودهای فرانسه", "رود فرانسه", "رودی در فرانسه"],
+            title: "مهم‌ترین رودهای فرانسه",
+            category: "جغرافیا / جدول",
+            desc: "رودهای پرکاربرد جدول:",
+            items: [
+                { word: "سن" }, { word: "لوآر" }, { word: "رون" }, { word: "گارون" }, { word: "مارن" }, { word: "راین" }
+            ]
+        },
+        {
+            keys: ["رودهای ایتالیا", "رود ایتالیا", "رودی در ایتالیا"],
+            title: "رودهای کشور ایتالیا",
+            category: "جغرافیا / جدول",
+            desc: "رودهای پرکاربرد ایتالیا:",
+            items: [
+                { word: "پو" }, { word: "تیبر" }, { word: "آرنو" }, { word: "آدیجه" }
+            ]
+        },
+        {
+            keys: ["کاشفان جهان", "کاشفان معروف", "کاشف"],
+            title: "کاشفان نامدار تاریخ",
+            category: "تاریخ / جدول",
+            desc: "کاشفان مناطق و قاره‌ها:",
+            items: [
+                { word: "کلمب", desc: "کاشف قاره آمریکا" },
+                { word: "ماژلان", desc: "سفر دور کره زمین" },
+                { word: "واسکو دو گاما", desc: "مسیر دریایی هند" },
+                { word: "مارکو پولو", desc: "جهانگرد ونیزی" },
+                { word: "جیمز کوک", desc: "کاشف استرالیا و هاوایی" },
+                { word: "آموندسن", desc: "فاتح قطب جنوب" }
+            ]
+        },
+        {
+            keys: ["مخترعان", "مخترعان بزرگ", "مخترع"],
+            title: "مخترعان بزرگ تاریخ",
+            category: "علم / جدول",
+            desc: "مخترعان مشهور در جدول:",
+            items: [
+                { word: "ادیسون", desc: "لامپ و گرامافون" },
+                { word: "بل", desc: "تلفن" },
+                { word: "مارکونی", desc: "رادیو" },
+                { word: "گوتنبرگ", desc: "صنعت چاپ" },
+                { word: "جیمز وات", desc: "موتور بخار" },
+                { word: "تسلا", desc: "جریان متناوب" },
+                { word: "برادران رایت", desc: "هواپیما" },
+                { word: "پاستور", desc: "واکسیناسیون" },
+                { word: "نوبل", desc: "دینامیت" }
+            ]
+        },
+        {
+            keys: ["گیاهان دارویی", "داروهای گیاهی"],
+            title: "گیاهان دارویی در جدول",
+            category: "گیاه‌شناسی / جدول",
+            desc: "اسامی کوتاه و پرتکرار گیاهان دارویی:",
+            items: [
+                { word: "آویشن" }, { word: "بابونه" }, { word: "کاسنی" }, { word: "گاوزبان" },
+                { word: "نعناع" }, { word: "بومادران" }, { word: "رزماری" }, { word: "شیرین‌بیان" }, { word: "ختمی" }
+            ]
+        },
+        {
+            keys: ["عناصر شیمیایی", "عنصرها", "جدول تناوبی"],
+            title: "عناصر شیمیایی پرکاربرد",
+            category: "شیمی / جدول",
+            desc: "نمونه عناصر کوتاه و چند حرفی جدول:",
+            items: [
+                { word: "طلا" }, { word: "مس" }, { word: "روی" }, { word: "آهن" },
+                { word: "سرب" }, { word: "ید" }, { word: "نقره" }, { word: "جیوه" }, { word: "نئون" }, { word: "هلیوم" }
+            ]
+        }
+    ];
+
+    // استانداردسازی حروف فارسی
+    function normalizePersian(str) {
+        if (!str) return '';
+        return str
+            .toString()
+            .replace(/[ي]/g, "ی")
+            .replace(/[ك]/g, "ک")
+            .replace(/[ۀة]/g, "ه")
+            .replace(/[آأإ]/g, "ا")
+            .replace(/[\u200B-\u200D\uFEFF]/g, " ")
+            .replace(/[ًٌٍَُِّْ]/g, "")
+            .replace(/[«»""''ـ\(\)\.\،؛؟\?!\-]/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+    }
+
+    // استخراج کلمات کلیدی با حذف کلمات پرسشی
+    function extractKeywords(str) {
+        const stopWords = ["چیست", "کیست", "کدام", "است", "در", "از", "به", "با", "نام", "دیگر", "معنی", "مترادف", "پایتخت", "نویسنده", "سازنده", "کشور", "شهر"];
+        const clean = normalizePersian(str);
+        const tokens = clean.split(" ").filter(w => w.length > 1);
+        const filtered = tokens.filter(w => !stopWords.includes(w));
+        return filtered.length > 0 ? filtered.join(" ") : clean;
+    }
+
+    // بازنویسی هوشمند برای جستجو در تمام حوزه‌ها
+    function smartQueryRewriter(query) {
+        let q = normalizePersian(query);
+
+        // ۱. هنر و ادبیات
+        q = q.replace(/^(سبک های نقاشی|سبک نقاشی|مکتب های نقاشی|مکتب های هنری|مکتب های ادبی|سبک های ادبی)/g, "فهرست جنبش‌های هنری");
+        q = q.replace(/^(آثار|کتاب های|رمان های|نوشته های|نقاشی های|فیلم های)\s+/g, "کتاب‌شناسی ");
+
+        // ۲. جغرافیا
+        q = q.replace(/^(رودی در|رودهای|رودخانه های|رودخانه|رود)\s+/g, "فهرست رودهای ");
+        q = q.replace(/^(کوهی در|کوههای|کوه‌های|قله های|کوه)\s+/g, "فهرست کوه‌های ");
+        q = q.replace(/^(تنگه های|تنگه ای در|تنگه)\s+/g, "فهرست تنگه‌های ");
+        q = q.replace(/^(خلیج های|خلیجی در|خلیج)\s+/g, "فهرست خلیج‌های ");
+        q = q.replace(/^(دریاچه های|دریاچه ای در|دریاچه)\s+/g, "فهرست دریاچه‌های ");
+        q = q.replace(/^(جزایر|جزیره های|جزیره ای در|جزیره)\s+/g, "فهرست جزیره‌های ");
+        q = q.replace(/^(شهرهای|شهری در|شهر)\s+/g, "فهرست شهرهای ");
+        q = q.replace(/^(کشورهای|کشوری در)\s+/g, "فهرست کشورهای ");
+        q = q.replace(/^(بنادر|بندر های|بندری در)\s+/g, "فهرست بندرهای ");
+        q = q.replace(/^(آبشارهای|آبشاری در)\s+/g, "فهرست آبشارهای ");
+        q = q.replace(/^(بیابان های|صحرای)\s+/g, "فهرست بیابان‌های ");
+
+        // ۳. تقسیمات کشوری
+        q = q.replace(/^(محله های|محله ای در|محلات|محله)\s+/g, "فهرست محله‌های ");
+        q = q.replace(/^(روستاهای|روستایی در|دهستان های|روستا)\s+/g, "فهرست روستاهای ");
+        q = q.replace(/^(بخش های|شهرستان های|شهرک های)\s+/g, "فهرست شهرستان‌های ");
+        q = q.replace(/^(استان های|ایالت های)\s+/g, "فهرست استان‌های ");
+
+        // ۴. مشاهیر و چهره‌ها
+        q = q.replace(/^(مخترع|مخترعان|اختراع)\s+/g, "فهرست مخترعان ");
+        q = q.replace(/^(کاشف|کاشفان|اکتشافات)\s+/g, "فهرست کاشفان ");
+        q = q.replace(/^(فضانوردان|فضانورد)\s+/g, "فهرست فضانوردان ");
+        q = q.replace(/^(پادشاهان|حاکمان|شاهان)\s+/g, "فهرست شاهان ");
+        q = q.replace(/^(ورزشکاران|قهرمانان|فوتبالیست های)\s+/g, "فهرست ورزشکاران ");
+        q = q.replace(/^(روزنامه های|مجلات|مطبوعات)\s+/g, "فهرست روزنامه‌های ");
+
+        // ۵. گیاهان و جانوران
+        q = q.replace(/^(پرندگان|پرنده ای از|پرنده)\s+/g, "فهرست پرندگان ");
+        q = q.replace(/^(پستانداران|حیوانات|جانوران|جانوری در)\s+/g, "فهرست پستانداران ");
+        q = q.replace(/^(ماهیان|ماهی های|آبزیان)\s+/g, "فهرست ماهیان ");
+        q = q.replace(/^(گیاهان دارویی|داروهای گیاهی)\s+/g, "فهرست گیاهان دارویی ");
+        q = q.replace(/^(درختان|درخت های)\s+/g, "فهرست درختان ");
+
+        return q.trim();
+    }
+
+    function cleanWord(str) {
+        return (str || '').replace(/[«»""''ـ\(\)\.\،؛]/g, '').trim();
+    }
+
+    function formatLetters(word) {
+        const pure = cleanWord(word).replace(/\s+/g, '');
+        const letters = pure.split('');
+        return {
+            count: letters.length,
+            spelled: letters.join('-')
+        };
+    }
+
+    function renderItems(items, targetLen = null) {
+        let filtered = items;
+        if (targetLen) {
+            filtered = items.filter(item => {
+                const pure = cleanWord(item.word).replace(/\s+/g, '');
+                return pure.length === targetLen;
+            });
+        }
+
+        if (filtered.length === 0) {
+            return `<div style="color:var(--muted); font-size:0.85rem; padding:8px;">موردی با طول ${targetLen} حرف در این بخش یافت نشد.</div>`;
+        }
+
+        return filtered.map(item => {
+            const w = cleanWord(item.word);
+            const meta = formatLetters(w);
+            return `
+                <div class="answer-row">
+                    <div>
+                        <span class="word-title">${w}</span>
+                        ${item.desc ? `<div style="font-size:0.75rem; color:var(--muted);">${item.desc}</div>` : ''}
+                    </div>
+                    <div class="word-meta">
+                        <span class="word-spelled">${meta.spelled}</span>
+                        <span class="word-count">${meta.count} حرف</span>
+                    </div>
+                </div>`;
+        }).join('');
+    }
+
+    // ۱. دریافت خلاصه از دانشنامه
+    async function queryWikipediaSummary(term) {
+        try {
+            const url = `https://fa.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(term)}`;
+            const res = await fetch(url);
+            if (!res.ok) return null;
+            const data = await res.json();
+            if (data.type === 'disambiguation' || !data.extract) return null;
+            return {
+                title: data.title,
+                extract: data.extract,
+                description: data.description || ''
+            };
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // ۲. جستجو در ویکی‌پدیا و استخراج کلمات
+    async function queryWikipediaSearch(term) {
+        try {
+            const url = `https://fa.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(term)}&format=json&origin=*&srlimit=15`;
+            const res = await fetch(url);
+            if (!res.ok) return [];
+            const data = await res.json();
+            const list = data.query?.search || [];
+            
+            return list.map(item => ({
+                word: item.title.replace(/^فهرست\s+/g, '').replace(/(\(.*\))/g, '').trim(),
+                desc: (item.snippet || '').replace(/<[^>]+>/g, '').slice(0, 80) + '...'
+            })).filter(item => item.word.length > 1);
+        } catch (e) {
+            return [];
+        }
+    }
+
+    // ۳. دریافت تعریف لغوی از ویکی‌واژه
+    async function queryWiktionary(term) {
+        try {
+            const url = `https://fa.wiktionary.org/w/api.php?action=query&prop=extracts&explaintext=1&titles=${encodeURIComponent(term)}&format=json&origin=*`;
+            const res = await fetch(url);
+            if (!res.ok) return null;
+            const data = await res.json();
+            const pages = data.query?.pages || {};
+            const pageId = Object.keys(pages)[0];
+
+            if (pageId && pageId !== "-1") {
+                const text = pages[pageId].extract || '';
+                const lines = text.split('\n')
+                    .map(l => l.trim())
+                    .filter(l => l && !l.startsWith('=') && l.length > 3);
+                return lines.slice(0, 2).join(' | ');
+            }
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // اجرای جستجو
+    async function executeSearch() {
+        const input = document.getElementById('queryInput');
+        const lenInput = document.getElementById('lenInput');
+        const qRaw = input.value.trim();
+        const targetLen = lenInput.value ? parseInt(lenInput.value, 10) : null;
+        const resContainer = document.getElementById('results');
+
+        if (!qRaw) {
+            resContainer.innerHTML = `<div class="card"><div class="card-desc" style="text-align: center;">لطفاً کلمه، سبک، نام، اثر یا سوال مورد نظر را بنویسید.</div></div>`;
+            return;
+        }
+
+        const normQ = normalizePersian(qRaw);
+        const searchKeywords = extractKeywords(qRaw);
+        const smartQuery = smartQueryRewriter(qRaw);
+
+        // تطبیق با بانک محلی
+        const localMatch = LOCAL_DATA.find(item => 
+            item.keys.some(k => {
+                const normK = normalizePersian(k);
+                return normQ.includes(normK) || normK.includes(normQ) || (searchKeywords && normK.includes(searchKeywords));
+            })
+        );
+
+        if (localMatch) {
+            resContainer.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">${localMatch.title}</span>
+                        <span class="card-badge">${localMatch.category}</span>
+                    </div>
+                    <div class="card-desc">${localMatch.desc}</div>
+                    <div class="answers-grid">
+                        ${renderItems(localMatch.items, targetLen)}
+                    </div>
+                </div>`;
+            return;
+        }
+
+        resContainer.innerHTML = `<div class="card loading">در حال واکاوی دانشنامه‌ها و دسته‌بندی پاسخ‌های جدول...</div>`;
+
+        try {
+            let [wikiSum, wikiList, wiktionary] = await Promise.all([
+                queryWikipediaSummary(searchKeywords || normQ),
+                queryWikipediaSearch(smartQuery !== normQ ? smartQuery : (searchKeywords || normQ)),
+                queryWiktionary(searchKeywords || normQ)
+            ]);
+
+            if (!wikiSum && smartQuery !== normQ) {
+                wikiSum = await queryWikipediaSummary(smartQuery);
+            }
+
+            let html = '';
+
+            // کارت ۱: دانشنامه
+            if (wikiSum) {
+                const meta = formatLetters(wikiSum.title);
+                html += `
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">${wikiSum.title}</span>
+                            <span class="card-badge">دانشنامه</span>
+                        </div>
+                        <div class="card-desc">${wikiSum.extract}</div>
+                        <div class="answer-row">
+                            <span class="word-title">${wikiSum.title}</span>
+                            <div class="word-meta">
+                                <span class="word-spelled">${meta.spelled}</span>
+                                <span class="word-count">${meta.count} حرف</span>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+
+            // کارت ۲: واژه‌نامه
+            if (wiktionary) {
+                html += `
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">${qRaw}</span>
+                            <span class="card-badge">معنی واژه</span>
+                        </div>
+                        <div class="card-desc">${wiktionary}</div>
+                    </div>`;
+            }
+
+            // کارت ۳: نتایج جدول با شمارش حرف
+            if (wikiList && wikiList.length > 0) {
+                html += `
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">گزینه‌ها و پاسخ‌های پیشنهادی جدول</span>
+                            <span class="card-badge">شمارش حروف</span>
+                        </div>
+                        <div class="card-desc">${targetLen ? `نتایج فیلتر شده بر اساس <b>${targetLen}</b> حرفی:` : 'عناوین و موارد متناظر:'}</div>
+                        <div class="answers-grid">
+                            ${renderItems(wikiList, targetLen)}
+                        </div>
+                    </div>`;
+            }
+
+            if (!html) {
+                const meta = formatLetters(qRaw);
+                html = `
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">${qRaw}</span>
+                            <span class="card-badge">شمارش حروف</span>
+                        </div>
+                        <div class="card-desc">پاسخ مستقیمی یافت نشد. از دکمه‌های بالای صفحه برای لغت‌نامه‌های تخصصی استفاده نمایید.</div>
+                        <div class="answer-row">
+                            <span class="word-title">${qRaw}</span>
+                            <div class="word-meta">
+                                <span class="word-spelled">${meta.spelled}</span>
+                                <span class="word-count">${meta.count} حرف</span>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+
+            resContainer.innerHTML = html;
+
+        } catch (error) {
+            resContainer.innerHTML = `<div class="card"><div class="card-desc" style="color: #b91c1c;">خطا در واکشی داده‌ها. اتصال اینترنت را بررسی فرمایید.</div></div>`;
+        }
+    }
+
+    // هدایت به لغت‌نامه‌ها
+    function openExternal(source) {
+        const q = document.getElementById('queryInput').value.trim();
+        if (!q) {
+            alert('لطفاً ابتدا کلمه مورد نظر را وارد کنید.');
+            return;
+        }
+
+        const cleanQ = extractKeywords(q);
+        const eq = encodeURIComponent(cleanQ || q);
+
+        const urls = {
+            dehkhoda: `https://vajehyab.com/?q=${eq}&d=dehkhoda`,
+            abadis: `https://abadis.ir/fatofa/${eq}/`,
+            amid: `https://vajehyab.com/?q=${eq}&d=amid`,
+            moein: `https://vajehyab.com/?q=${eq}&d=moein`,
+            vajehyab: `https://vajehyab.com/?q=${eq}`,
+            wiktionary: `https://fa.wiktionary.org/wiki/${eq}`,
+            wikipedia: `https://fa.wikipedia.org/wiki/${eq}`
+        };
+
+        if (urls[source]) {
+            window.open(urls[source], '_blank');
+        }
+    }
+
+    document.getElementById('queryInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') executeSearch();
+    });
+    document.getElementById('lenInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') executeSearch();
+    });
+</script>
+
+</body>
+</html>
