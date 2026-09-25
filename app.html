@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>دانشیار - جستجوی هوشمند</title>
+    <style>
+        :root { --bg: #f8fafc; --primary: #0d9488; --text: #0f172a; --muted: #64748b; --radius: 12px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Tahoma, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg); color: var(--text); padding: 14px 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 720px; display: flex; flex-direction: column; gap: 12px; }
+        
+        .search-wrapper { background: #ffffff; border-radius: var(--radius); border: 2px solid #cbd5e1; display: flex; align-items: center; padding: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); gap: 4px; }
+        .search-input { flex: 1; border: none; outline: none; padding: 14px 15px; font-size: 1rem; color: #1e293b; background: transparent; }
+        .search-btn { background: var(--primary); color: #ffffff; border: none; border-radius: 8px; padding: 12px 20px; font-size: 0.95rem; font-weight: bold; cursor: pointer; transition: background 0.3s ease; }
+
+        .tabs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 6px; }
+        .tab-btn { border: none; padding: 10px 5px; border-radius: 8px; color: #ffffff; font-size: 0.75rem; font-weight: bold; cursor: pointer; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .tab-dehkhoda { background: #ef4444; } .tab-abadis { background: #3b82f6; } .tab-wikipedia { background: #334155; }
+
+        .card { background: #ffffff; border: 1px solid #e2e8f0; padding: 16px; border-radius: var(--radius); box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .card-header { font-size: 0.95rem; font-weight: bold; color: var(--primary); margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+        .result-item { padding: 8px 0; border-bottom: 1px dashed #f1f5f9; font-size: 0.95rem; }
+        .works-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+        .works-list li { padding: 8px 10px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0; }
+        .empty-msg { text-align: center; color: var(--muted); padding: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="search-wrapper">
+        <input type="text" id="queryInput" class="search-input" placeholder="جستجوی نام نویسنده یا موضوع..." autocomplete="off">
+        <button id="searchBtn" class="search-btn" type="button">جستجو</button>
+    </div>
+
+    <div class="tabs-grid">
+        <button class="tab-btn tab-dehkhoda" type="button" data-src="dehkhoda">دهخدا</button>
+        <button class="tab-btn tab-abadis" type="button" data-src="abadis">آبادیس</button>
+        <button class="tab-btn tab-wikipedia" type="button" data-src="wikipedia">ویکی‌پدیا</button>
+    </div>
+
+    <div id="results" class="results-box">
+        <div class="card empty-msg">عبارت را وارد کرده و دکمه جستجو را بزنید.</div>
+    </div>
+</div>
+
+<script>
+    // تغییر رنگ دکمه برای اطمینان از اجرای اسکریپت
+    function updateBtnColor() {
+        const colors = ['#0d9488', '#0284c7', '#7c3aed', '#c026d3', '#db2777'];
+        document.getElementById('searchBtn').style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    const localDatabase = [
+        { q: "شهرستان بروجرد", answers: ["اشترینان", "بروجرد"] },
+        { q: "رودهای ایران", answers: ["کارون", "زاینده رود", "سفید رود"] },
+        { q: "پایتخت فرانسه", answers: ["پاریس"] }
+    ];
+
+    async function fetchOnlineAuthorWorks(query) {
+        try {
+            const searchRes = await fetch(`https://fa.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=1&format=json&origin=*`);
+            const searchData = await searchRes.json();
+            if (!searchData[1][0]) return null;
+            
+            const pageTitle = searchData[1][0];
+            const parseRes = await fetch(`https://fa.wikipedia.org/w/api.php?action=parse&page=${encodeURIComponent(pageTitle)}&prop=sections|text&format=json&origin=*`);
+            const parseData = await parseRes.json();
+            
+            const sections = parseData.parse.sections;
+            const keywords = ["آثار", "کتاب‌شناسی", "فیلم‌شناسی", "داستان", "نمایشنامه"];
+            const targetSection = sections.find(s => keywords.some(k => s.line.includes(k)));
+            
+            if (!targetSection) return null;
+
+            const div = document.createElement('div');
+            div.innerHTML = parseData.parse.text["*"];
+            const listItems = Array.from(div.querySelectorAll('li')).map(li => li.innerText.replace(/\[.*?\]/g, '').trim()).filter(t => t.length > 3);
+            
+            return { title: pageTitle, list: [...new Set(listItems)] };
+        } catch (e) { return null; }
+    }
+
+    async function executeSearch() {
+        updateBtnColor();
+        const qRaw = document.getElementById('queryInput').value.trim();
+        const resContainer = document.getElementById('results');
+        
+        if (!qRaw) { resContainer.innerHTML = '<div class="card empty-msg">لطفاً چیزی بنویسید.</div>'; return; }
+        
+        resContainer.innerHTML = '<div class="card empty-msg">در حال جستجو...</div>';
+        
+        let outputHtml = '';
+
+        // ۱. جستجو در دیتابیس محلی
+        const matches = localDatabase.filter(item => item.q.toLowerCase().includes(qRaw.toLowerCase()));
+        if (matches.length > 0) {
+            outputHtml += `<div class="card"><div class="card-header">یافته‌های دانشنامه محلی</div>`;
+            matches.forEach(m => {
+                m.answers.forEach(ans => outputHtml += `<div class="result-item">${ans}</div>`);
+            });
+            outputHtml += `</div>`;
+        }
+
+        // ۲. جستجوی آنلاین
+        const authorData = await fetchOnlineAuthorWorks(qRaw);
+        if (authorData) {
+            outputHtml += `<div class="card"><div class="card-header">آثار ${authorData.title}</div><ul class="works-list">`;
+            authorData.list.forEach(w => outputHtml += `<li>${w}</li>`);
+            outputHtml += `</ul></div>`;
+        }
+
+        resContainer.innerHTML = outputHtml || '<div class="card empty-msg">نتیجه‌ای یافت نشد.</div>';
+    }
+
+    document.getElementById('searchBtn').addEventListener('click', executeSearch);
+    document.getElementById('queryInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') executeSearch(); });
+    
+    // اجرای اولیه
+    updateBtnColor();
+</script>
+</body>
+</html>
