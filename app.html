@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>دانشیار - دانشنامه جامع و حل جدول</title>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --primary: #0d9488;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #cbd5e1;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Tahoma, system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 14px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 720px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .search-wrapper {
+            background: #ffffff;
+            border-radius: var(--radius);
+            border: 2px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            padding: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            gap: 4px;
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 12px 14px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #1e293b;
+            background: transparent;
+        }
+
+        .search-btn {
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tabs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));
+            gap: 6px;
+        }
+
+        .tab-btn {
+            border: none;
+            padding: 10px 4px;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+        }
+
+        .tab-dehkhoda { background: #ef4444; }
+        .tab-abadis { background: #3b82f6; }
+        .tab-amid { background: #10b981; }
+        .tab-moein { background: #8b5cf6; }
+        .tab-vajehyab { background: #f59e0b; }
+        .tab-wiktionary { background: #ec4899; }
+        .tab-wikipedia { background: #334155; }
+
+        .results-box {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid #e2e8f0;
+            padding: 14px 16px;
+            border-radius: var(--radius);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .card-header {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 8px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 6px;
+        }
+
+        .answer-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #f1f5f9;
+        }
+
+        .ans-text { font-weight: bold; color: #1e293b; font-size: 1rem; }
+        .ans-spelling { color: #64748b; font-size: 0.85rem; margin-right: 6px; }
+
+        .works-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 0;
+        }
+
+        .works-list li {
+            padding: 8px 10px;
+            background: #f8fafc;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #1e293b;
+            border: 1px solid #f1f5f9;
+        }
+
+        .wiki-desc {
+            line-height: 1.8;
+            font-size: 0.92rem;
+            color: #334155;
+            text-align: justify;
+        }
+
+        .empty-msg {
+            text-align: center;
+            color: var(--muted);
+            padding: 20px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="search-wrapper">
+        <!-- کادر کاملاً خالی بدون هیچ متن پیش‌فرض یا متغیر -->
+        <input type="text" id="queryInput" class="search-input" value="" placeholder="" autocomplete="off">
+        <button id="searchBtn" class="search-btn" type="button">جستجو</button>
+    </div>
+
+    <!-- تب‌های ۷ گانه فرهنگ لغت -->
+    <div class="tabs-grid">
+        <button class="tab-btn tab-dehkhoda" type="button" data-src="dehkhoda">دهخدا</button>
+        <button class="tab-btn tab-abadis" type="button" data-src="abadis">آبادیس</button>
+        <button class="tab-btn tab-amid" type="button" data-src="amid">عمید</button>
+        <button class="tab-btn tab-moein" type="button" data-src="moein">معین</button>
+        <button class="tab-btn tab-vajehyab" type="button" data-src="vajehyab">واژه‌یاب</button>
+        <button class="tab-btn tab-wiktionary" type="button" data-src="wiktionary">ویکی‌واژه</button>
+        <button class="tab-btn tab-wikipedia" type="button" data-src="wikipedia">ویکی‌پدیا</button>
+    </div>
+
+    <div id="results" class="results-box">
+        <div class="card empty-msg">عبارت مورد نظر خود را در کادر بالا وارد کرده و دکمه جستجو را بزنید.</div>
+    </div>
+</div>
+
+<script>
+    // تغییر تصادفی رنگ دکمه هنگام بارگذاری برای اطمینان از اعمال تغییرات
+    function updateBtnColor() {
+        const colors = ['#0d9488', '#0284c7', '#2563eb', '#7c3aed', '#c026d3', '#db2777', '#d97706', '#059669'];
+        const btn = document.getElementById('searchBtn');
+        if (btn) btn.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    }
+    updateBtnColor();
+
+    const localDatabase = [
+        { q: "شهرستان بروجرد", answers: ["اشترینان", "بروجرد"] },
+        { q: "اثر تولستوی", answers: ["جنگ و صلح", "آنا کارنینا", "رستاخیز", "مرگ ایوان ایلیچ", "قزاقان"] },
+        { q: "رودهای ایران", answers: ["کارون", "زاینده رود", "سفید رود", "ارس", "کرخه", "اترک"] },
+        { q: "پایتخت فرانسه", answers: ["پاریس"] },
+        { q: "شاعر بوستان و گلستان", answers: ["سعدی"] }
+    ];
+
+    function formatSpelling(txt) {
+        return txt.replace(/\s+/g, '').split('').join(' - ');
+    }
+
+    // جستجوی آنلاین مطمئن و استخراج آثار یا توضیحات دانشنامه
+    async function fetchOnlineData(query) {
+        try {
+            // ۱. یافتن عنوان دقیق صفحه
+            const searchApi = `https://fa.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=1&namespace=0&format=json&origin=*`;
+            const sRes = await fetch(searchApi);
+            const sData = await sRes.json();
+
+            if (!sData[1] || sData[1].length === 0) return null;
+            const pageTitle = sData[1][0];
+
+            // ۲. دریافت محتوا و بخش‌های صفحه
+            const parseApi = `https://fa.wikipedia.org/w/api.php?action=parse&page=${encodeURIComponent(pageTitle)}&prop=text|sections&format=json&origin=*`;
+            const pRes = await fetch(parseApi);
+            const pData = await pRes.json();
+
+            if (!pData.parse || !pData.parse.text) return null;
+
+            const htmlContent = pData.parse.text["*"];
+            const container = document.createElement('div');
+            container.innerHTML = htmlContent;
+
+            // تمیزکاری محتوا از ارجاعات و عناصر غیرضروری
+            container.querySelectorAll('.reference, .reflist, script, style, .mw-empty-elt').forEach(el => el.remove());
+
+            const keywords = ["آثار", "کتاب‌شناسی", "کتابشناسی", "فیلم‌شناسی", "فیلمشناسی", "نوشته‌ها", "داستان", "رمان", "نمایشنامه", "اشعار", "مجموعه"];
+            const sections = pData.parse.sections || [];
+            let works = [];
+
+            // بررسی تیترهای صفحه برای پیدا کردن بخش آثار
+            sections.forEach(sec => {
+                if (keywords.some(k => sec.line.includes(k))) {
+                    const headline = container.querySelector(`[id="${sec.anchor}"]`);
+                    if (headline) {
+                        const parentHeader = headline.closest('h2, h3, h4, h5');
+                        if (parentHeader) {
+                            let curr = parentHeader.nextElementSibling;
+                            while (curr && !/^H[1-6]$/.test(curr.tagName)) {
+                                if (curr.tagName === 'UL' || curr.tagName === 'OL') {
+                                    curr.querySelectorAll('li').forEach(li => {
+                                        const cleanText = li.innerText.replace(/\[.*?\]/g, '').trim();
+                                        if (cleanText.length > 1) works.push(cleanText);
+                                    });
+                                }
+                                curr = curr.nextElementSibling;
+                            }
+                        }
+                    }
+                }
+            });
+
+            if (works.length > 0) {
+                return {
+                    title: pageTitle,
+                    type: 'works',
+                    list: Array.from(new Set(works))
+                };
+            }
+
+            // اگر لیست آثار مستقیم پیدا نشد، خلاصه متن را استخراج کن
+            const paragraphs = container.querySelectorAll('p');
+            for (let p of paragraphs) {
+                const txt = p.innerText.replace(/\[.*?\]/g, '').trim();
+                if (txt.length > 30) {
+                    return {
+                        title: pageTitle,
+                        type: 'summary',
+                        text: txt
+                    };
+                }
+            }
+
+            return null;
+        } catch (err) {
+            console.error(err);
+            return null;
+        }
+    }
+
+    async function executeSearch() {
+        updateBtnColor();
+        const qRaw = document.getElementById('queryInput').value.trim();
+        const resContainer = document.getElementById('results');
+
+        if (!qRaw) {
+            resContainer.innerHTML = `<div class="card empty-msg">لطفاً عبارت مورد نظر را وارد کنید.</div>`;
+            return;
+        }
+
+        resContainer.innerHTML = `<div class="card empty-msg">در حال جستجو و تحلیل دانشنامه...</div>`;
+
+        let outputHtml = '';
+        const qClean = qRaw.toLowerCase();
+
+        // ۱. جستجو در بانک محلی جدول
+        const localMatches = localDatabase.filter(item => 
+            item.q.toLowerCase().includes(qClean) || qClean.includes(item.q.toLowerCase())
+        );
+
+        if (localMatches.length > 0) {
+            outputHtml += `<div class="card"><div class="card-header">پاسخ‌های جدولی</div>`;
+            localMatches.forEach(item => {
+                item.answers.forEach(ans => {
+                    outputHtml += `
+                        <div class="answer-row">
+                            <span class="ans-text">${ans}</span>
+                            <span class="ans-spelling">(${formatSpelling(ans)})</span>
+                        </div>
+                    `;
+                });
+            });
+            outputHtml += `</div>`;
+        }
+
+        // ۲. جستجو در دانشنامه و استخراج آثار
+        const onlineResult = await fetchOnlineData(qRaw);
+        if (onlineResult) {
+            if (onlineResult.type === 'works') {
+                outputHtml += `<div class="card"><div class="card-header">فهرست آثار و نوشته‌های «${onlineResult.title}»</div>`;
+                outputHtml += `<ul class="works-list">`;
+                onlineResult.list.forEach(w => {
+                    outputHtml += `<li>${w}</li>`;
+                });
+                outputHtml += `</ul></div>`;
+            } else if (onlineResult.type === 'summary') {
+                outputHtml += `
+                    <div class="card">
+                        <div class="card-header">دانشنامه: ${onlineResult.title}</div>
+                        <div class="wiki-desc">${onlineResult.text}</div>
+                    </div>
+                `;
+            }
+        }
+
+        if (outputHtml) {
+            resContainer.innerHTML = outputHtml;
+        } else {
+            resContainer.innerHTML = `
+                <div class="card empty-msg">
+                    نتیجه مستقیمی یافت نشد. می‌توانید از تب‌های رنگی بالا برای جستجوی واژه در لغت‌نامه‌ها استفاده کنید.
+                </div>
+            `;
+        }
+    }
+
+    // هدایت به فرهنگ لغت‌ها
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const q = document.getElementById('queryInput').value.trim();
+            if (!q) {
+                alert('لطفاً ابتدا کلمه مورد نظر را بنویسید.');
+                return;
+            }
+            const src = btn.getAttribute('data-src');
+            let url = '';
+
+            switch (src) {
+                case 'dehkhoda':
+                case 'amid':
+                case 'moein':
+                case 'vajehyab':
+                    url = `https://vajehyab.com/?q=${encodeURIComponent(q)}`;
+                    break;
+                case 'abadis':
+                    url = `https://abadis.ir/fatofa/${encodeURIComponent(q)}/`;
+                    break;
+                case 'wiktionary':
+                    url = `https://fa.wiktionary.org/wiki/${encodeURIComponent(q)}`;
+                    break;
+                case 'wikipedia':
+                    url = `https://fa.wikipedia.org/wiki/${encodeURIComponent(q)}`;
+                    break;
+            }
+
+            if (url) window.open(url, '_blank');
+        });
+    });
+
+    document.getElementById('searchBtn').addEventListener('click', executeSearch);
+    document.getElementById('queryInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') executeSearch();
+    });
+</script>
+</body>
+</html>
